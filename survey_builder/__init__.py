@@ -1,5 +1,6 @@
 from flask import Flask
 
+from . import models  # noqa: F401  (register models with SQLAlchemy)
 from .config import load_config
 from .extensions import db, migrate
 
