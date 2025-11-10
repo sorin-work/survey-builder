@@ -2,7 +2,7 @@ from flask import Flask, render_template
 
 from . import models  # noqa: F401  (register models with SQLAlchemy)
 from .config import load_config
-from .extensions import db, migrate
+from .extensions import db, login_manager, migrate
 
 
 def create_app(config: dict | None = None) -> Flask:
@@ -13,6 +13,11 @@ def create_app(config: dict | None = None) -> Flask:
 
     db.init_app(app)
     migrate.init_app(app, db)
+    login_manager.init_app(app)
+
+    from .auth import bp as auth_bp
+
+    app.register_blueprint(auth_bp)
 
     @app.get("/")
     def index():

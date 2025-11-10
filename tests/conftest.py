@@ -1,6 +1,7 @@
 import os
 
 import pytest
+from flask import g
 
 from survey_builder import create_app
 from survey_builder.extensions import db as _db
@@ -15,6 +16,13 @@ def app():
             "SECRET_KEY": "test",
         }
     )
+
+    # The app context stays pushed for the whole test, so ``g`` would be
+    # shared between requests. Drop the user Flask-Login cached there.
+    @app.before_request
+    def _forget_cached_user():
+        g.pop("_login_user", None)
+
     with app.app_context():
         _db.create_all()
         yield app
