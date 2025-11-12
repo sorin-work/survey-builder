@@ -37,3 +37,36 @@ def test_validate_registration_messages():
     errors = validate_registration("", "not-an-email", "short")
     assert set(errors) == {"name", "email", "password"}
     assert validate_registration("Ana", "ana@example.com", "longenough") == {}
+
+
+def test_login_with_valid_credentials(client):
+    register(client)
+    client.post("/logout")
+    resp = client.post("/login", data={"email": "ANA@example.com", "password": "s3cret-pass"})
+    assert resp.status_code == 302
+    with client.session_transaction() as sess:
+        assert "_user_id" in sess
+
+
+def test_login_with_wrong_password(client):
+    register(client)
+    client.post("/logout")
+    resp = client.post("/login", data={"email": "ana@example.com", "password": "nope"})
+    assert resp.status_code == 401
+    assert b"incorrect" in resp.data
+
+
+def test_login_redirects_to_safe_next_only(client):
+    register(client)
+    client.post("/logout")
+    creds = {"email": "ana@example.com", "password": "s3cret-pass"}
+    resp = client.post("/login?next=/surveys", data=creds)
+    assert resp.headers["Location"] == "/surveys"
+    client.post("/logout")
+    resp = client.post("/login?next=//evil.example.com", data=creds)
+    assert resp.headers["Location"] == "/"
+
+
+def test_logout_requires_post(client):
+    register(client)
+    assert client.get("/logout").status_code == 405

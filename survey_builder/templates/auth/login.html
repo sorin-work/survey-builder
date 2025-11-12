@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Sign in · Survey Builder{% endblock %}
+{% block content %}
+  <section class="card narrow">
+    <h1>Sign in</h1>
+    {% if error %}<div class="flash flash-error">{{ error }}</div>{% endif %}
+    <form method="post" novalidate>
+      <div class="field">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" value="{{ email }}" autocomplete="email" required>
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" autocomplete="current-password" required>
+      </div>
+      <div class="field">
+        <label class="inline"><input type="checkbox" name="remember" value="1"> Keep me signed in</label>
+      </div>
+      <button class="btn" type="submit">Sign in</button>
+    </form>
+    <p class="muted">No account yet? <a href="{{ url_for('auth.register') }}">Create one</a>.</p>
+  </section>
+{% endblock %}

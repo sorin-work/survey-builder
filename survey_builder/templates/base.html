@@ -11,7 +11,17 @@
   <body>
     <header class="topbar">
       <a class="brand" href="{{ url_for('index') }}">Survey Builder</a>
-      <nav>{% block nav %}{% endblock %}</nav>
+      <nav>
+        {% if current_user.is_authenticated %}
+          <span class="muted">{{ current_user.name }}</span>
+          <form method="post" action="{{ url_for('auth.logout') }}" class="inline">
+            <button class="link" type="submit">Sign out</button>
+          </form>
+        {% else %}
+          <a href="{{ url_for('auth.login') }}">Sign in</a>
+          <a class="btn" href="{{ url_for('auth.register') }}">Create account</a>
+        {% endif %}
+      </nav>
     </header>
     <main class="container">
       {% with messages = get_flashed_messages(with_categories=true) %}

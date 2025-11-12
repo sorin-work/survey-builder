@@ -1,7 +1,7 @@
 import re
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
-from flask_login import current_user, login_user
+from flask_login import current_user, login_required, login_user, logout_user
 from sqlalchemy import select
 
 from .extensions import db, login_manager
@@ -62,3 +62,37 @@ def register():
 
     status = 422 if errors else 200
     return render_template("auth/register.html", form=form, errors=errors), status
+
+
+def is_safe_next(target: str | None) -> bool:
+    return bool(target) and target.startswith("/") and not target.startswith("//")
+
+
+@bp.route("/login", methods=["GET", "POST"])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for("index"))
+
+    error = None
+    email = ""
+    if request.method == "POST":
+        email = normalize_email(request.form.get("email", ""))
+        password = request.form.get("password", "")
+        user = db.session.scalar(select(User).filter_by(email=email))
+        if user is None or not user.check_password(password):
+            error = "Email or password is incorrect."
+        else:
+            login_user(user, remember=bool(request.form.get("remember")))
+            target = request.args.get("next")
+            return redirect(target if is_safe_next(target) else url_for("index"))
+
+    status = 401 if error else 200
+    return render_template("auth/login.html", email=email, error=error), status
+
+
+@bp.post("/logout")
+@login_required
+def logout():
+    logout_user()
+    flash("You have been signed out.", "success")
+    return redirect(url_for("auth.login"))
