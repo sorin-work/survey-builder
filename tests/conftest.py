@@ -38,3 +38,18 @@ def db(app):
 @pytest.fixture
 def client(app):
     return app.test_client()
+
+
+@pytest.fixture
+def owner(db):
+    from factories import make_user
+
+    return make_user()
+
+
+@pytest.fixture
+def auth_client(client, owner):
+    from factories import login
+
+    login(client, owner)
+    return client

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Your surveys · Survey Builder{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <h1>Your surveys</h1>
+    <a class="btn" href="{{ url_for('surveys.create') }}">New survey</a>
+  </div>
+  {% if surveys %}
+    <ul class="survey-list">
+      {% for survey in surveys %}
+        <li class="card">
+          <strong>{{ survey.title }}</strong>
+          <span class="badge badge-{{ survey.status }}">{{ survey.status }}</span>
+          {% if survey.description %}<p class="muted">{{ survey.description }}</p>{% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="card empty">
+      <p>You have no surveys yet.</p>
+      <a class="btn" href="{{ url_for('surveys.create') }}">Create your first survey</a>
+    </div>
+  {% endif %}
+{% endblock %}
