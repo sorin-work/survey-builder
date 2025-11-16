@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}{{ survey.title }} · Editor{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div>
+      <a class="muted" href="{{ url_for('surveys.dashboard') }}">&larr; All surveys</a>
+      <h1>{{ survey.title }}</h1>
+    </div>
+    <a class="btn btn-secondary" href="{{ url_for('surveys.edit', survey_id=survey.id) }}">Settings</a>
+  </div>
+
+  <div id="pages">
+    {% for page in survey.pages %}
+      {% include "editor/_page.html" %}
+    {% endfor %}
+  </div>
+
+  <form method="post" action="{{ url_for('editor.add_page', survey_id=survey.id) }}"
+        hx-post="{{ url_for('editor.add_page', survey_id=survey.id) }}"
+        hx-target="#pages" hx-swap="beforeend">
+    <button class="btn btn-secondary" type="submit">+ Add page</button>
+  </form>
+{% endblock %}

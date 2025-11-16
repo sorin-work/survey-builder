@@ -9,10 +9,11 @@
     <ul class="survey-list">
       {% for survey in surveys %}
         <li class="card">
-          <strong>{{ survey.title }}</strong>
+          <a class="survey-title" href="{{ url_for('editor.edit', survey_id=survey.id) }}">{{ survey.title }}</a>
           <span class="badge badge-{{ survey.status }}">{{ survey.status }}</span>
           {% if survey.description %}<p class="muted">{{ survey.description }}</p>{% endif %}
           <div class="actions">
+            <a href="{{ url_for('editor.edit', survey_id=survey.id) }}">Edit</a>
             <a href="{{ url_for('surveys.edit', survey_id=survey.id) }}">Settings</a>
           </div>
         </li>

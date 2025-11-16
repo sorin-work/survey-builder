@@ -1,0 +1,8 @@
+<form class="page-title" method="post"
+      action="{{ url_for('editor.rename_page', survey_id=survey.id, page_id=page.id) }}"
+      hx-post="{{ url_for('editor.rename_page', survey_id=survey.id, page_id=page.id) }}"
+      hx-trigger="change" hx-swap="outerHTML">
+  <span class="page-number">Page {{ page.position + 1 }}</span>
+  <input type="text" name="title" value="{{ page.title }}" placeholder="Untitled page" maxlength="200"
+         aria-label="Page title">
+</form>

@@ -55,8 +55,8 @@ def create():
             survey.pages.append(Page(title="", position=0))
             db.session.add(survey)
             db.session.commit()
-            flash("Survey created.", "success")
-            return redirect(url_for("surveys.dashboard"))
+            flash("Survey created. Add your first questions below.", "success")
+            return redirect(url_for("editor.edit", survey_id=survey.id))
     status = 422 if errors else 200
     return render_template("surveys/form.html", form=form, errors=errors, survey=None), status
 

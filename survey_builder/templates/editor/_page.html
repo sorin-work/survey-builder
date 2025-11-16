@@ -1,0 +1,14 @@
+<section class="card editor-page" id="page-{{ page.id }}">
+  <div class="editor-page-header">
+    {% include "editor/_page_title.html" %}
+    <form method="post" action="{{ url_for('editor.delete_page', survey_id=survey.id, page_id=page.id) }}"
+          hx-post="{{ url_for('editor.delete_page', survey_id=survey.id, page_id=page.id) }}"
+          hx-target="#page-{{ page.id }}" hx-swap="outerHTML"
+          hx-confirm="Delete this page and its questions?">
+      <button class="link danger" type="submit">Delete page</button>
+    </form>
+  </div>
+  <div class="questions" id="questions-{{ page.id }}">
+    {% if not page.questions %}<p class="muted">No questions on this page yet.</p>{% endif %}
+  </div>
+</section>
