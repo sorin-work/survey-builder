@@ -9,6 +9,19 @@
     </form>
   </div>
   <div class="questions" id="questions-{{ page.id }}">
-    {% if not page.questions %}<p class="muted">No questions on this page yet.</p>{% endif %}
+    {% for question in page.questions %}
+      {% include "editor/_question.html" %}
+    {% endfor %}
   </div>
+  <form class="add-question" method="post"
+        action="{{ url_for('editor.add_question', survey_id=survey.id, page_id=page.id) }}"
+        hx-post="{{ url_for('editor.add_question', survey_id=survey.id, page_id=page.id) }}"
+        hx-target="#questions-{{ page.id }}" hx-swap="beforeend">
+    <select name="type" aria-label="Question type">
+      {% for qtype in question_types.values() %}
+        <option value="{{ qtype.key }}">{{ qtype.label }}</option>
+      {% endfor %}
+    </select>
+    <button class="btn btn-secondary" type="submit">+ Add question</button>
+  </form>
 </section>

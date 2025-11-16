@@ -244,3 +244,34 @@ button.link.danger {
   text-decoration: none;
   color: var(--text);
 }
+
+.question {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+  background: #fbfcfd;
+}
+
+.question-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.question-prompt {
+  margin: 0.25rem 0;
+  font-weight: 600;
+}
+
+.add-question {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.add-question select {
+  width: auto;
+}

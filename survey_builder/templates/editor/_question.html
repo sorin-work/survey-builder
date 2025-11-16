@@ -1,0 +1,12 @@
+<article class="question" id="question-{{ question.id }}">
+  <div class="question-header">
+    <span class="question-type">{{ question_types[question.type].label if question_types is defined else question.type }}</span>
+    {% if question.required %}<span class="badge">Required</span>{% endif %}
+  </div>
+  <p class="question-prompt">{{ question.prompt }}</p>
+  {% if question.choices %}
+    <ul class="choice-list">
+      {% for choice in question.choices %}<li>{{ choice.label }}</li>{% endfor %}
+    </ul>
+  {% endif %}
+</article>

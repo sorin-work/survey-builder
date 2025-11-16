@@ -8,8 +8,9 @@ working without JavaScript.
 from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
 from flask_login import login_required
 
+from .domain.question_types import QUESTION_TYPES, default_settings, get_type
 from .extensions import db
-from .models import Page, Survey
+from .models import Choice, Page, Question, Survey
 from .surveys import get_owned_survey
 
 bp = Blueprint("editor", __name__, url_prefix="/surveys/<int:survey_id>")
@@ -36,6 +37,13 @@ def get_page(survey: Survey, page_id: int) -> Page:
     return page
 
 
+def get_question(survey: Survey, question_id: int) -> Question:
+    question = db.session.get(Question, question_id)
+    if question is None or question.page.survey_id != survey.id:
+        abort(404)
+    return question
+
+
 def renumber(items) -> None:
     for position, item in enumerate(items):
         item.position = position
@@ -44,7 +52,7 @@ def renumber(items) -> None:
 @bp.get("/edit")
 def edit(survey_id: int):
     survey = get_owned_survey(survey_id)
-    return render_template("editor/edit.html", survey=survey)
+    return render_template("editor/edit.html", survey=survey, question_types=QUESTION_TYPES)
 
 
 @bp.post("/pages")
@@ -54,7 +62,9 @@ def add_page(survey_id: int):
     survey.pages.append(page)
     db.session.commit()
     if is_htmx():
-        return render_template("editor/_page.html", survey=survey, page=page)
+        return render_template(
+            "editor/_page.html", survey=survey, page=page, question_types=QUESTION_TYPES
+        )
     return back_to_editor(survey, f"page-{page.id}")
 
 
@@ -82,3 +92,26 @@ def delete_page(survey_id: int, page_id: int):
     if is_htmx():
         return ""
     return back_to_editor(survey)
+
+
+@bp.post("/pages/<int:page_id>/questions")
+def add_question(survey_id: int, page_id: int):
+    survey = get_owned_survey(survey_id)
+    page = get_page(survey, page_id)
+    try:
+        qtype = get_type(request.form.get("type", ""))
+    except ValueError:
+        abort(400)
+    question = Question(
+        type=qtype.key,
+        prompt="Untitled question",
+        position=len(page.questions),
+        settings=default_settings(qtype.key),
+    )
+    if qtype.has_choices:
+        question.choices = [Choice(label=f"Option {i}", position=i - 1) for i in (1, 2)]
+    page.questions.append(question)
+    db.session.commit()
+    if is_htmx():
+        return render_template("editor/_question.html", survey=survey, question=question)
+    return back_to_editor(survey, f"question-{question.id}")
