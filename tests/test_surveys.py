@@ -41,3 +41,33 @@ def test_create_survey_requires_title(auth_client, db):
 def test_index_redirects_signed_in_users(auth_client):
     resp = auth_client.get("/")
     assert resp.headers["Location"] == "/surveys/"
+
+
+def test_edit_survey_details(auth_client, owner, db):
+    survey = make_survey(owner, title="Old")
+    resp = auth_client.post(
+        f"/surveys/{survey.id}/settings", data={"title": "New", "description": "Hi"}
+    )
+    assert resp.status_code == 302
+    db.session.refresh(survey)
+    assert (survey.title, survey.description) == ("New", "Hi")
+
+
+def test_cannot_edit_someone_elses_survey(auth_client, db):
+    survey = make_survey(make_user("other@example.com"), title="Theirs")
+    assert auth_client.get(f"/surveys/{survey.id}/settings").status_code == 404
+    resp = auth_client.post(f"/surveys/{survey.id}/settings", data={"title": "Hacked"})
+    assert resp.status_code == 404
+
+
+def test_delete_survey(auth_client, owner, db):
+    survey = make_survey(owner)
+    resp = auth_client.post(f"/surveys/{survey.id}/delete")
+    assert resp.status_code == 302
+    assert db.session.query(Survey).count() == 0
+
+
+def test_cannot_delete_someone_elses_survey(auth_client, db):
+    survey = make_survey(make_user("other@example.com"))
+    assert auth_client.post(f"/surveys/{survey.id}/delete").status_code == 404
+    assert db.session.query(Survey).count() == 1

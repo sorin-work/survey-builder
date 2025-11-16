@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% block title %}New survey · Survey Builder{% endblock %}
+{% block title %}{{ "Survey settings" if survey else "New survey" }} · Survey Builder{% endblock %}
 {% block content %}
   <section class="card">
-    <h1>New survey</h1>
+    <h1>{{ "Survey settings" if survey else "New survey" }}</h1>
     <form method="post" novalidate>
       <div class="field">
         <label for="title">Title</label>
@@ -13,8 +13,18 @@
         <label for="description">Description <span class="muted">(optional)</span></label>
         <textarea id="description" name="description" rows="3">{{ form.description }}</textarea>
       </div>
-      <button class="btn" type="submit">Create survey</button>
+      <button class="btn" type="submit">{{ "Save" if survey else "Create survey" }}</button>
       <a class="btn btn-secondary" href="{{ url_for('surveys.dashboard') }}">Cancel</a>
     </form>
   </section>
+  {% if survey %}
+    <section class="card danger-zone">
+      <h2>Delete survey</h2>
+      <p class="muted">This removes the survey, its questions and every response. It cannot be undone.</p>
+      <form method="post" action="{{ url_for('surveys.delete', survey_id=survey.id) }}"
+            onsubmit="return confirm('Delete this survey and all of its responses?')">
+        <button class="btn btn-danger" type="submit">Delete survey</button>
+      </form>
+    </section>
+  {% endif %}
 {% endblock %}

@@ -12,6 +12,9 @@
           <strong>{{ survey.title }}</strong>
           <span class="badge badge-{{ survey.status }}">{{ survey.status }}</span>
           {% if survey.description %}<p class="muted">{{ survey.description }}</p>{% endif %}
+          <div class="actions">
+            <a href="{{ url_for('surveys.edit', survey_id=survey.id) }}">Settings</a>
+          </div>
         </li>
       {% endfor %}
     </ul>

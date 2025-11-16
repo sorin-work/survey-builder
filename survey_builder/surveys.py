@@ -58,4 +58,34 @@ def create():
             flash("Survey created.", "success")
             return redirect(url_for("surveys.dashboard"))
     status = 422 if errors else 200
-    return render_template("surveys/form.html", form=form, errors=errors), status
+    return render_template("surveys/form.html", form=form, errors=errors, survey=None), status
+
+
+@bp.route("/<int:survey_id>/settings", methods=["GET", "POST"])
+def edit(survey_id: int):
+    survey = get_owned_survey(survey_id)
+    form = {"title": survey.title, "description": survey.description}
+    errors: dict[str, str] = {}
+    if request.method == "POST":
+        form = {
+            "title": request.form.get("title", "").strip(),
+            "description": request.form.get("description", "").strip(),
+        }
+        errors = validate_survey_form(form["title"])
+        if not errors:
+            survey.title = form["title"]
+            survey.description = form["description"]
+            db.session.commit()
+            flash("Survey updated.", "success")
+            return redirect(url_for("surveys.dashboard"))
+    status = 422 if errors else 200
+    return render_template("surveys/form.html", form=form, errors=errors, survey=survey), status
+
+
+@bp.post("/<int:survey_id>/delete")
+def delete(survey_id: int):
+    survey = get_owned_survey(survey_id)
+    db.session.delete(survey)
+    db.session.commit()
+    flash(f"Deleted “{survey.title}”.", "success")
+    return redirect(url_for("surveys.dashboard"))
