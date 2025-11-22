@@ -24,6 +24,10 @@ def create_app(config: dict | None = None) -> Flask:
     app.register_blueprint(surveys_bp)
     app.register_blueprint(editor_bp)
 
+    from .domain.question_types import QUESTION_TYPES
+
+    app.jinja_env.globals["QUESTION_TYPES"] = QUESTION_TYPES
+
     @app.get("/")
     def index():
         if current_user.is_authenticated:

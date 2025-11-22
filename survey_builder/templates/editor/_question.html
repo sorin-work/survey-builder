@@ -1,12 +1,29 @@
+{% set errors = errors or {} %}
 <article class="question" id="question-{{ question.id }}">
-  <div class="question-header">
-    <span class="question-type">{{ question_types[question.type].label if question_types is defined else question.type }}</span>
-    {% if question.required %}<span class="badge">Required</span>{% endif %}
-  </div>
-  <p class="question-prompt">{{ question.prompt }}</p>
-  {% if question.choices %}
-    <ul class="choice-list">
-      {% for choice in question.choices %}<li>{{ choice.label }}</li>{% endfor %}
-    </ul>
-  {% endif %}
+  <form method="post" action="{{ url_for('editor.update_question', survey_id=survey.id, question_id=question.id) }}"
+        hx-post="{{ url_for('editor.update_question', survey_id=survey.id, question_id=question.id) }}"
+        hx-target="#question-{{ question.id }}" hx-swap="outerHTML">
+    <div class="question-header">
+      <span class="question-type">{{ QUESTION_TYPES[question.type].label }}</span>
+      <label class="inline">
+        <input type="checkbox" name="required" {% if question.required %}checked{% endif %}> Required
+      </label>
+    </div>
+    <div class="field">
+      <input type="text" name="prompt" value="{{ question.prompt }}" maxlength="500"
+             aria-label="Question text" class="question-prompt">
+      {% if errors.prompt %}<div class="field-error">{{ errors.prompt }}</div>{% endif %}
+    </div>
+    <div class="field">
+      <input type="text" name="help_text" value="{{ question.help_text }}" maxlength="500"
+             placeholder="Help text (optional)" aria-label="Help text">
+      {% if errors.help_text %}<div class="field-error">{{ errors.help_text }}</div>{% endif %}
+    </div>
+    {% if question.choices %}
+      <ul class="choice-list">
+        {% for choice in question.choices %}<li>{{ choice.label }}</li>{% endfor %}
+      </ul>
+    {% endif %}
+    <button class="btn btn-secondary btn-small" type="submit">Save question</button>
+  </form>
 </article>

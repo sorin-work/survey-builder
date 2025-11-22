@@ -8,7 +8,7 @@ working without JavaScript.
 from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
 from flask_login import login_required
 
-from .domain.question_types import QUESTION_TYPES, default_settings, get_type
+from .domain.question_types import default_settings, get_type
 from .extensions import db
 from .models import Choice, Page, Question, Survey
 from .surveys import get_owned_survey
@@ -52,7 +52,7 @@ def renumber(items) -> None:
 @bp.get("/edit")
 def edit(survey_id: int):
     survey = get_owned_survey(survey_id)
-    return render_template("editor/edit.html", survey=survey, question_types=QUESTION_TYPES)
+    return render_template("editor/edit.html", survey=survey)
 
 
 @bp.post("/pages")
@@ -62,9 +62,7 @@ def add_page(survey_id: int):
     survey.pages.append(page)
     db.session.commit()
     if is_htmx():
-        return render_template(
-            "editor/_page.html", survey=survey, page=page, question_types=QUESTION_TYPES
-        )
+        return render_template("editor/_page.html", survey=survey, page=page)
     return back_to_editor(survey, f"page-{page.id}")
 
 
@@ -114,4 +112,45 @@ def add_question(survey_id: int, page_id: int):
     db.session.commit()
     if is_htmx():
         return render_template("editor/_question.html", survey=survey, question=question)
+    return back_to_editor(survey, f"question-{question.id}")
+
+
+PROMPT_MAX = 500
+HELP_MAX = 500
+
+
+def render_question(survey: Survey, question: Question, errors=None, status=200):
+    html = render_template(
+        "editor/_question.html", survey=survey, question=question, errors=errors or {}
+    )
+    return html, status
+
+
+@bp.post("/questions/<int:question_id>")
+def update_question(survey_id: int, question_id: int):
+    survey = get_owned_survey(survey_id)
+    question = get_question(survey, question_id)
+    prompt = request.form.get("prompt", "").strip()
+    help_text = request.form.get("help_text", "").strip()
+    errors = {}
+    if not prompt:
+        errors["prompt"] = "The question needs some text."
+    elif len(prompt) > PROMPT_MAX:
+        errors["prompt"] = f"Keep the question under {PROMPT_MAX} characters."
+    if len(help_text) > HELP_MAX:
+        errors["help_text"] = f"Keep the help text under {HELP_MAX} characters."
+
+    if errors:
+        db.session.rollback()
+        if is_htmx():
+            return render_question(survey, question, errors, 422)
+        flash(next(iter(errors.values())), "error")
+        return back_to_editor(survey, f"question-{question.id}")
+
+    question.prompt = prompt
+    question.help_text = help_text
+    question.required = request.form.get("required") == "on"
+    db.session.commit()
+    if is_htmx():
+        return render_question(survey, question)
     return back_to_editor(survey, f"question-{question.id}")

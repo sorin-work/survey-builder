@@ -18,7 +18,7 @@
         hx-post="{{ url_for('editor.add_question', survey_id=survey.id, page_id=page.id) }}"
         hx-target="#questions-{{ page.id }}" hx-swap="beforeend">
     <select name="type" aria-label="Question type">
-      {% for qtype in question_types.values() %}
+      {% for qtype in QUESTION_TYPES.values() %}
         <option value="{{ qtype.key }}">{{ qtype.label }}</option>
       {% endfor %}
     </select>
