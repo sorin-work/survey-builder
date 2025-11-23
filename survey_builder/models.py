@@ -1,5 +1,6 @@
 from datetime import UTC, datetime
 
+from flask import current_app
 from flask_login import UserMixin
 from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -25,7 +26,8 @@ class User(UserMixin, db.Model):
     surveys: Mapped[list["Survey"]] = relationship(back_populates="owner")
 
     def set_password(self, password: str) -> None:
-        self.password_hash = generate_password_hash(password)
+        method = current_app.config.get("PASSWORD_HASH_METHOD", "scrypt")
+        self.password_hash = generate_password_hash(password, method=method)
 
     def check_password(self, password: str) -> bool:
         return check_password_hash(self.password_hash, password)
