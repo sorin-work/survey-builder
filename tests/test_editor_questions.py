@@ -100,3 +100,25 @@ def test_question_from_another_survey_is_404(auth_client, owner, db):
     db.session.commit()
     question = theirs.pages[0].questions[0]
     assert update(auth_client, mine, question, prompt="x").status_code == 404
+
+
+def test_update_rating_settings(auth_client, owner, db):
+    survey = make_survey(owner)
+    add_question(auth_client, survey, "rating")
+    question = db.session.query(Question).one()
+    resp = update(auth_client, survey, question, prompt="How was it?", scale="7", low_label="Bad")
+    assert resp.status_code == 200
+    db.session.refresh(question)
+    assert question.settings == {"scale": 7, "low_label": "Bad", "high_label": ""}
+
+
+def test_invalid_settings_are_not_saved(auth_client, owner, db):
+    survey = make_survey(owner)
+    add_question(auth_client, survey, "rating")
+    question = db.session.query(Question).one()
+    resp = update(auth_client, survey, question, prompt="Changed", scale="42")
+    assert resp.status_code == 422
+    assert b"between 3 and 10" in resp.data
+    db.session.refresh(question)
+    assert question.prompt == "Untitled question"
+    assert question.settings == {"scale": 5}

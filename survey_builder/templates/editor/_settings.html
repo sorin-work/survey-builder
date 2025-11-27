@@ -1,0 +1,48 @@
+{% set s = question.settings or {} %}
+{% macro number(name, label, value, min=0, max=None) %}
+  <div class="setting">
+    <label for="{{ name }}-{{ question.id }}">{{ label }}</label>
+    <input type="number" id="{{ name }}-{{ question.id }}" name="{{ name }}" min="{{ min }}"
+           {% if max %}max="{{ max }}"{% endif %} value="{{ value if value is not none else '' }}">
+    {% if errors[name] %}<div class="field-error">{{ errors[name] }}</div>{% endif %}
+  </div>
+{% endmacro %}
+{% macro text(name, label, value) %}
+  <div class="setting">
+    <label for="{{ name }}-{{ question.id }}">{{ label }}</label>
+    <input type="text" id="{{ name }}-{{ question.id }}" name="{{ name }}" maxlength="60" value="{{ value or '' }}">
+    {% if errors[name] %}<div class="field-error">{{ errors[name] }}</div>{% endif %}
+  </div>
+{% endmacro %}
+{% macro day(name, label, value) %}
+  <div class="setting">
+    <label for="{{ name }}-{{ question.id }}">{{ label }}</label>
+    <input type="date" id="{{ name }}-{{ question.id }}" name="{{ name }}" value="{{ value or '' }}">
+    {% if errors[name] %}<div class="field-error">{{ errors[name] }}</div>{% endif %}
+  </div>
+{% endmacro %}
+
+<details class="settings" {% if errors %}open{% endif %}>
+  <summary>Options</summary>
+  <div class="settings-grid">
+    {% if question.type in ("short_text", "long_text") %}
+      {{ number("min_length", "Minimum length", s.min_length) }}
+      {{ number("max_length", "Maximum length", s.max_length, min=1) }}
+    {% elif question.type == "multiple_choice" %}
+      {{ number("min_choices", "Pick at least", s.min_choices) }}
+      {{ number("max_choices", "Pick at most", s.max_choices, min=1) }}
+    {% elif question.type == "rating" %}
+      {{ number("scale", "Scale (3-10)", s.scale, min=3, max=10) }}
+      {{ text("low_label", "Low label", s.low_label) }}
+      {{ text("high_label", "High label", s.high_label) }}
+    {% elif question.type == "nps" %}
+      {{ text("low_label", "Label for 0", s.low_label) }}
+      {{ text("high_label", "Label for 10", s.high_label) }}
+    {% elif question.type == "date" %}
+      {{ day("min_date", "Earliest date", s.min_date) }}
+      {{ day("max_date", "Latest date", s.max_date) }}
+    {% else %}
+      <p class="muted">No extra options for this question type.</p>
+    {% endif %}
+  </div>
+</details>

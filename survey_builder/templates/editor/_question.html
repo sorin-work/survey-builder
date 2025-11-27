@@ -19,6 +19,7 @@
              placeholder="Help text (optional)" aria-label="Help text">
       {% if errors.help_text %}<div class="field-error">{{ errors.help_text }}</div>{% endif %}
     </div>
+    {% include "editor/_settings.html" %}
     {% if question.choices %}
       <ul class="choice-list">
         {% for choice in question.choices %}<li>{{ choice.label }}</li>{% endfor %}

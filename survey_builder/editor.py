@@ -9,6 +9,7 @@ from flask import Blueprint, abort, flash, redirect, render_template, request, u
 from flask_login import login_required
 
 from .domain.question_types import default_settings, get_type
+from .domain.settings import parse_settings
 from .extensions import db
 from .models import Choice, Page, Question, Survey
 from .surveys import get_owned_survey
@@ -139,6 +140,8 @@ def update_question(survey_id: int, question_id: int):
         errors["prompt"] = f"Keep the question under {PROMPT_MAX} characters."
     if len(help_text) > HELP_MAX:
         errors["help_text"] = f"Keep the help text under {HELP_MAX} characters."
+    settings, setting_errors = parse_settings(question.type, request.form)
+    errors.update(setting_errors)
 
     if errors:
         db.session.rollback()
@@ -150,6 +153,7 @@ def update_question(survey_id: int, question_id: int):
     question.prompt = prompt
     question.help_text = help_text
     question.required = request.form.get("required") == "on"
+    question.settings = settings
     db.session.commit()
     if is_htmx():
         return render_question(survey, question)
