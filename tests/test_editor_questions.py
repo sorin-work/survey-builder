@@ -122,3 +122,14 @@ def test_invalid_settings_are_not_saved(auth_client, owner, db):
     db.session.refresh(question)
     assert question.prompt == "Untitled question"
     assert question.settings == {"scale": 5}
+
+
+def test_delete_question_renumbers_the_rest(auth_client, owner, db):
+    survey = make_survey(owner)
+    for qtype in ("short_text", "rating", "nps"):
+        add_question(auth_client, survey, qtype)
+    first = survey.pages[0].questions[0]
+    resp = auth_client.post(f"/surveys/{survey.id}/questions/{first.id}/delete", headers=HX)
+    assert resp.status_code == 200
+    db.session.refresh(survey.pages[0])
+    assert [(q.type, q.position) for q in survey.pages[0].questions] == [("rating", 0), ("nps", 1)]

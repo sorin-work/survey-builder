@@ -318,3 +318,9 @@ input.question-prompt {
 .choice-row input {
   width: calc(100% - 2rem);
 }
+
+.question-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}

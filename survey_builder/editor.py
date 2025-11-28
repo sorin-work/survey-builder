@@ -213,3 +213,16 @@ def delete_choice(survey_id: int, choice_id: int):
     if is_htmx():
         return render_question(survey, question)
     return back_to_editor(survey, f"question-{question.id}")
+
+
+@bp.post("/questions/<int:question_id>/delete")
+def delete_question(survey_id: int, question_id: int):
+    survey = get_owned_survey(survey_id)
+    question = get_question(survey, question_id)
+    page = question.page
+    page.questions.remove(question)
+    renumber(page.questions)
+    db.session.commit()
+    if is_htmx():
+        return ""
+    return back_to_editor(survey, f"page-{page.id}")
