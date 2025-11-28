@@ -20,10 +20,22 @@
       {% if errors.help_text %}<div class="field-error">{{ errors.help_text }}</div>{% endif %}
     </div>
     {% include "editor/_settings.html" %}
-    {% if question.choices %}
-      <ul class="choice-list">
-        {% for choice in question.choices %}<li>{{ choice.label }}</li>{% endfor %}
-      </ul>
+    {% if QUESTION_TYPES[question.type].has_choices %}
+      <ol class="choice-list">
+        {% for choice in question.choices %}
+          <li class="choice-row">
+            <input type="text" name="choice_{{ choice.id }}" value="{{ choice.label }}" maxlength="300"
+                   aria-label="Option {{ loop.index }}">
+            <button class="link danger" type="button" title="Remove option"
+                    hx-post="{{ url_for('editor.delete_choice', survey_id=survey.id, choice_id=choice.id) }}"
+                    hx-target="#question-{{ question.id }}" hx-swap="outerHTML">&times;</button>
+          </li>
+        {% endfor %}
+      </ol>
+      {% if errors.choices %}<div class="field-error">{{ errors.choices }}</div>{% endif %}
+      <button class="link" type="button"
+              hx-post="{{ url_for('editor.add_choice', survey_id=survey.id, question_id=question.id) }}"
+              hx-target="#question-{{ question.id }}" hx-swap="outerHTML">+ Add option</button>
     {% endif %}
     <button class="btn btn-secondary btn-small" type="submit">Save question</button>
   </form>

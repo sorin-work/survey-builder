@@ -305,3 +305,16 @@ input.question-prompt {
 .setting label {
   font-size: 0.85rem;
 }
+
+.choice-list {
+  padding-left: 1.25rem;
+  margin: 0.5rem 0;
+}
+
+.choice-row {
+  margin-bottom: 0.35rem;
+}
+
+.choice-row input {
+  width: calc(100% - 2rem);
+}
