@@ -1,8 +1,8 @@
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 from flask import current_app
 from flask_login import UserMixin
-from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import JSON, Boolean, Date, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -50,6 +50,9 @@ class Survey(db.Model):
     owner: Mapped[User] = relationship(back_populates="surveys")
     pages: Mapped[list["Page"]] = relationship(
         back_populates="survey", order_by="Page.position", cascade="all, delete-orphan"
+    )
+    responses: Mapped[list["Response"]] = relationship(
+        back_populates="survey", cascade="all, delete-orphan", passive_deletes=True
     )
 
     def __repr__(self) -> str:
@@ -99,3 +102,46 @@ class Choice(db.Model):
     position: Mapped[int] = mapped_column(Integer, default=0)
 
     question: Mapped[Question] = relationship(back_populates="choices")
+
+
+class Response(db.Model):
+    """One respondent's pass through a survey. Respondents are anonymous."""
+
+    __tablename__ = "responses"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    survey_id: Mapped[int] = mapped_column(ForeignKey("surveys.id", ondelete="CASCADE"), index=True)
+    key: Mapped[str] = mapped_column(String(32), unique=True)
+    started_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime, index=True)
+
+    survey: Mapped[Survey] = relationship(back_populates="responses")
+    answers: Mapped[list["Answer"]] = relationship(
+        back_populates="response", cascade="all, delete-orphan", passive_deletes=True
+    )
+
+    @property
+    def is_complete(self) -> bool:
+        return self.completed_at is not None
+
+
+class Answer(db.Model):
+    """A single answer value. Multiple choice answers store one row per choice."""
+
+    __tablename__ = "answers"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    response_id: Mapped[int] = mapped_column(
+        ForeignKey("responses.id", ondelete="CASCADE"), index=True
+    )
+    question_id: Mapped[int] = mapped_column(
+        ForeignKey("questions.id", ondelete="CASCADE"), index=True
+    )
+    choice_id: Mapped[int | None] = mapped_column(ForeignKey("choices.id", ondelete="CASCADE"))
+    text_value: Mapped[str | None] = mapped_column(Text)
+    number_value: Mapped[int | None] = mapped_column(Integer)
+    date_value: Mapped[date | None] = mapped_column(Date)
+
+    response: Mapped[Response] = relationship(back_populates="answers")
+    question: Mapped[Question] = relationship()
+    choice: Mapped[Choice | None] = relationship()
