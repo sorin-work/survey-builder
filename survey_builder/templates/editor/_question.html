@@ -43,6 +43,14 @@
               hx-post="{{ url_for('editor.delete_question', survey_id=survey.id, question_id=question.id) }}"
               hx-target="#question-{{ question.id }}" hx-swap="outerHTML"
               hx-confirm="Delete this question?">Delete</button>
+      <span class="move">
+        {% for direction, symbol in (("up", "&uarr;"), ("down", "&darr;")) %}
+          <button class="link" type="button" title="Move {{ direction }}"
+                  hx-post="{{ url_for('editor.move_question', survey_id=survey.id, question_id=question.id) }}"
+                  hx-vals='{"direction": "{{ direction }}"}'
+                  hx-target="#page-{{ question.page_id }}" hx-swap="outerHTML">{{ symbol|safe }}</button>
+        {% endfor %}
+      </span>
     </div>
   </form>
 </article>

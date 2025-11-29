@@ -226,3 +226,24 @@ def delete_question(survey_id: int, question_id: int):
     if is_htmx():
         return ""
     return back_to_editor(survey, f"page-{page.id}")
+
+
+@bp.post("/questions/<int:question_id>/move")
+def move_question(survey_id: int, question_id: int):
+    survey = get_owned_survey(survey_id)
+    question = get_question(survey, question_id)
+    page = question.page
+    direction = request.form.get("direction")
+    if direction not in ("up", "down"):
+        abort(400)
+    questions = list(page.questions)
+    index = questions.index(question)
+    target = index - 1 if direction == "up" else index + 1
+    if 0 <= target < len(questions):
+        questions[index], questions[target] = questions[target], questions[index]
+        renumber(questions)
+        db.session.commit()
+        db.session.refresh(page)
+    if is_htmx():
+        return render_template("editor/_page.html", survey=survey, page=page)
+    return back_to_editor(survey, f"question-{question.id}")

@@ -324,3 +324,9 @@ input.question-prompt {
   align-items: center;
   gap: 1rem;
 }
+
+.move {
+  margin-left: auto;
+  display: flex;
+  gap: 0.5rem;
+}

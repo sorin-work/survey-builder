@@ -133,3 +133,41 @@ def test_delete_question_renumbers_the_rest(auth_client, owner, db):
     assert resp.status_code == 200
     db.session.refresh(survey.pages[0])
     assert [(q.type, q.position) for q in survey.pages[0].questions] == [("rating", 0), ("nps", 1)]
+
+
+def prompts(survey):
+    return [q.prompt for q in survey.pages[0].questions]
+
+
+def test_move_question_up_and_down(auth_client, owner, db):
+    survey = make_survey(owner)
+    page = survey.pages[0]
+    page.questions = [
+        Question(type="short_text", prompt=p, position=i) for i, p in enumerate("ABC")
+    ]
+    db.session.commit()
+    c = page.questions[2]
+    url = f"/surveys/{survey.id}/questions/{c.id}/move"
+
+    resp = auth_client.post(url, data={"direction": "up"}, headers=HX)
+    assert resp.status_code == 200
+    db.session.refresh(page)
+    assert prompts(survey) == ["A", "C", "B"]
+
+    auth_client.post(url, data={"direction": "up"}, headers=HX)
+    auth_client.post(url, data={"direction": "up"}, headers=HX)  # already first: no-op
+    db.session.refresh(page)
+    assert prompts(survey) == ["C", "A", "B"]
+
+    auth_client.post(url, data={"direction": "down"}, headers=HX)
+    db.session.refresh(page)
+    assert prompts(survey) == ["A", "C", "B"]
+    assert [q.position for q in page.questions] == [0, 1, 2]
+
+
+def test_move_requires_direction(auth_client, owner, db):
+    survey = make_survey(owner)
+    add_question(auth_client, survey, "short_text")
+    question = survey.pages[0].questions[0]
+    resp = auth_client.post(f"/surveys/{survey.id}/questions/{question.id}/move", headers=HX)
+    assert resp.status_code == 400
