@@ -5,6 +5,7 @@
           hx-post="{{ url_for('editor.delete_page', survey_id=survey.id, page_id=page.id) }}"
           hx-target="#page-{{ page.id }}" hx-swap="outerHTML"
           hx-confirm="Delete this page and its questions?">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <button class="link danger" type="submit">Delete page</button>
     </form>
   </div>
@@ -17,6 +18,7 @@
         action="{{ url_for('editor.add_question', survey_id=survey.id, page_id=page.id) }}"
         hx-post="{{ url_for('editor.add_question', survey_id=survey.id, page_id=page.id) }}"
         hx-target="#questions-{{ page.id }}" hx-swap="beforeend">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <select name="type" aria-label="Question type">
       {% for qtype in QUESTION_TYPES.values() %}
         <option value="{{ qtype.key }}">{{ qtype.label }}</option>

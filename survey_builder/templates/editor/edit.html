@@ -18,6 +18,7 @@
   <form method="post" action="{{ url_for('editor.add_page', survey_id=survey.id) }}"
         hx-post="{{ url_for('editor.add_page', survey_id=survey.id) }}"
         hx-target="#pages" hx-swap="beforeend">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <button class="btn btn-secondary" type="submit">+ Add page</button>
   </form>
 {% endblock %}

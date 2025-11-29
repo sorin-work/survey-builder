@@ -3,6 +3,7 @@
   <form method="post" action="{{ url_for('editor.update_question', survey_id=survey.id, question_id=question.id) }}"
         hx-post="{{ url_for('editor.update_question', survey_id=survey.id, question_id=question.id) }}"
         hx-target="#question-{{ question.id }}" hx-swap="outerHTML">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="question-header">
       <span class="question-type">{{ QUESTION_TYPES[question.type].label }}</span>
       <label class="inline">

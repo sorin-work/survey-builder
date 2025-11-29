@@ -8,13 +8,14 @@
     <script src="{{ url_for('static', filename='vendor/htmx.min.js') }}" defer></script>
     {% block head %}{% endblock %}
   </head>
-  <body>
+  <body hx-headers='{"X-CSRFToken": "{{ csrf_token() }}"}'>
     <header class="topbar">
       <a class="brand" href="{{ url_for('index') }}">Survey Builder</a>
       <nav>
         {% if current_user.is_authenticated %}
           <span class="muted">{{ current_user.name }}</span>
           <form method="post" action="{{ url_for('auth.logout') }}" class="inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button class="link" type="submit">Sign out</button>
           </form>
         {% else %}

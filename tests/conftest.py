@@ -14,6 +14,7 @@ def app():
             "TESTING": True,
             "SQLALCHEMY_DATABASE_URI": os.environ.get("TEST_DATABASE_URL", "sqlite://"),
             "SECRET_KEY": "test",
+            "WTF_CSRF_ENABLED": False,
             # scrypt is deliberately slow; the tests do not need that.
             "PASSWORD_HASH_METHOD": "pbkdf2:sha256:1000",
         }

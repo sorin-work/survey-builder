@@ -4,6 +4,7 @@
   <section class="card">
     <h1>{{ "Survey settings" if survey else "New survey" }}</h1>
     <form method="post" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="field">
         <label for="title">Title</label>
         <input type="text" id="title" name="title" value="{{ form.title }}" maxlength="200" required>
@@ -23,6 +24,7 @@
       <p class="muted">This removes the survey, its questions and every response. It cannot be undone.</p>
       <form method="post" action="{{ url_for('surveys.delete', survey_id=survey.id) }}"
             onsubmit="return confirm('Delete this survey and all of its responses?')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button class="btn btn-danger" type="submit">Delete survey</button>
       </form>
     </section>

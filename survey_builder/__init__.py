@@ -3,7 +3,7 @@ from flask_login import current_user
 
 from . import models  # noqa: F401  (register models with SQLAlchemy)
 from .config import load_config
-from .extensions import db, login_manager, migrate
+from .extensions import csrf, db, login_manager, migrate
 
 
 def create_app(config: dict | None = None) -> Flask:
@@ -15,6 +15,7 @@ def create_app(config: dict | None = None) -> Flask:
     db.init_app(app)
     migrate.init_app(app, db)
     login_manager.init_app(app)
+    csrf.init_app(app)
 
     from .auth import bp as auth_bp
     from .editor import bp as editor_bp
