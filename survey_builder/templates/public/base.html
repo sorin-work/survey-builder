@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}{{ survey.title }}{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  </head>
+  <body class="public">
+    <main class="container narrow-public">
+      {% block content %}{% endblock %}
+    </main>
+    <footer class="public-footer muted">Made with Survey Builder</footer>
+  </body>
+</html>

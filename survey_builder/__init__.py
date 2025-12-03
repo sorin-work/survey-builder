@@ -19,11 +19,13 @@ def create_app(config: dict | None = None) -> Flask:
 
     from .auth import bp as auth_bp
     from .editor import bp as editor_bp
+    from .public import bp as public_bp
     from .surveys import bp as surveys_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(surveys_bp)
     app.register_blueprint(editor_bp)
+    app.register_blueprint(public_bp)
 
     from .domain.question_types import QUESTION_TYPES
 

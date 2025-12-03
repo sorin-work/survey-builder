@@ -335,3 +335,99 @@ input.question-prompt {
   display: flex;
   gap: 0.5rem;
 }
+
+/* Public survey pages */
+
+.narrow-public {
+  max-width: 720px;
+}
+
+.survey-header {
+  margin-bottom: 1rem;
+}
+
+.public-question {
+  border: none;
+  padding: 0;
+  margin: 0 0 1.5rem;
+}
+
+.public-question legend {
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+.public-question.has-error input,
+.public-question.has-error textarea {
+  border-color: var(--danger);
+}
+
+.required {
+  color: var(--danger);
+  margin-left: 0.15rem;
+}
+
+.help {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+}
+
+.options {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.option {
+  font-weight: 400;
+}
+
+.scale {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.scale-point input {
+  position: absolute;
+  opacity: 0;
+}
+
+.scale-point span {
+  display: inline-block;
+  min-width: 2.4rem;
+  padding: 0.4rem 0.6rem;
+  text-align: center;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 400;
+}
+
+.scale-point input:checked + span {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.scale-point input:focus-visible + span {
+  outline: 2px solid var(--accent-dark);
+}
+
+.scale-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+.form-nav {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.public-footer {
+  text-align: center;
+  font-size: 0.85rem;
+  padding: 2rem 0;
+}

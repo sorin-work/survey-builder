@@ -1,0 +1,49 @@
+{% macro render_question(question, values, error) %}
+  {% set name = "q" ~ question.id %}
+  {% set s = question.settings or {} %}
+  <fieldset class="public-question{% if error %} has-error{% endif %}" id="{{ name }}">
+    <legend>
+      {{ question.prompt }}
+      {% if question.required %}<span class="required" title="Required">*</span>{% endif %}
+    </legend>
+    {% if question.help_text %}<p class="help muted">{{ question.help_text }}</p>{% endif %}
+
+    {% if question.type == "short_text" %}
+      <input type="text" name="{{ name }}" value="{{ values[0] if values else '' }}"
+             {% if s.max_length %}maxlength="{{ s.max_length }}"{% endif %} aria-label="{{ question.prompt }}">
+    {% elif question.type == "long_text" %}
+      <textarea name="{{ name }}" rows="5" {% if s.max_length %}maxlength="{{ s.max_length }}"{% endif %}
+                aria-label="{{ question.prompt }}">{{ values[0] if values else '' }}</textarea>
+    {% elif question.type in ("single_choice", "multiple_choice") %}
+      {% set input_type = "radio" if question.type == "single_choice" else "checkbox" %}
+      <div class="options">
+        {% for choice in question.choices %}
+          <label class="option">
+            <input type="{{ input_type }}" name="{{ name }}" value="{{ choice.id }}"
+                   {% if choice.id|string in values %}checked{% endif %}>
+            {{ choice.label }}
+          </label>
+        {% endfor %}
+      </div>
+    {% elif question.type in ("rating", "nps") %}
+      {% set low, high = (0, 10) if question.type == "nps" else (1, s.scale or 5) %}
+      <div class="scale">
+        {% for n in range(low, high + 1) %}
+          <label class="scale-point">
+            <input type="radio" name="{{ name }}" value="{{ n }}" {% if n|string in values %}checked{% endif %}>
+            <span>{{ n }}</span>
+          </label>
+        {% endfor %}
+      </div>
+      {% if s.low_label or s.high_label %}
+        <div class="scale-labels muted"><span>{{ s.low_label }}</span><span>{{ s.high_label }}</span></div>
+      {% endif %}
+    {% elif question.type == "date" %}
+      <input type="date" name="{{ name }}" value="{{ values[0] if values else '' }}"
+             {% if s.min_date %}min="{{ s.min_date }}"{% endif %} {% if s.max_date %}max="{{ s.max_date }}"{% endif %}
+             aria-label="{{ question.prompt }}">
+    {% endif %}
+
+    {% if error %}<div class="field-error" role="alert">{{ error }}</div>{% endif %}
+  </fieldset>
+{% endmacro %}
