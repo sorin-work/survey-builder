@@ -2,8 +2,9 @@ from flask import Blueprint, abort, flash, redirect, render_template, request, u
 from flask_login import current_user, login_required
 from sqlalchemy import select
 
+from .domain import sharing
 from .extensions import db
-from .models import Page, Survey
+from .models import Page, Survey, utcnow
 
 bp = Blueprint("surveys", __name__, url_prefix="/surveys")
 
@@ -89,3 +90,30 @@ def delete(survey_id: int):
     db.session.commit()
     flash(f"Deleted “{survey.title}”.", "success")
     return redirect(url_for("surveys.dashboard"))
+
+
+@bp.post("/<int:survey_id>/publish")
+def publish(survey_id: int):
+    survey = get_owned_survey(survey_id)
+    problems = sharing.publish_problems(survey)
+    if problems:
+        for problem in problems:
+            flash(problem, "error")
+        return redirect(url_for("editor.edit", survey_id=survey.id))
+    if survey.share_token is None:
+        survey.share_token = sharing.new_share_token()
+    survey.status = sharing.PUBLISHED
+    survey.published_at = survey.published_at or utcnow()
+    db.session.commit()
+    flash("Your survey is live. Share the link below.", "success")
+    return redirect(url_for("editor.edit", survey_id=survey.id))
+
+
+@bp.post("/<int:survey_id>/close")
+def close(survey_id: int):
+    survey = get_owned_survey(survey_id)
+    if survey.status == sharing.PUBLISHED:
+        survey.status = sharing.CLOSED
+        db.session.commit()
+        flash("The survey no longer accepts responses.", "success")
+    return redirect(url_for("editor.edit", survey_id=survey.id))

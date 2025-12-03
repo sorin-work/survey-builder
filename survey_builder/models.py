@@ -44,6 +44,8 @@ class Survey(db.Model):
     title: Mapped[str] = mapped_column(String(200))
     description: Mapped[str] = mapped_column(Text, default="")
     status: Mapped[str] = mapped_column(String(20), default="draft")
+    share_token: Mapped[str | None] = mapped_column(String(32), unique=True)
+    published_at: Mapped[datetime | None] = mapped_column(DateTime)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
 
@@ -54,6 +56,10 @@ class Survey(db.Model):
     responses: Mapped[list["Response"]] = relationship(
         back_populates="survey", cascade="all, delete-orphan", passive_deletes=True
     )
+
+    @property
+    def questions(self) -> list["Question"]:
+        return [q for page in self.pages for q in page.questions]
 
     def __repr__(self) -> str:
         return f"<Survey {self.id} {self.title!r}>"
