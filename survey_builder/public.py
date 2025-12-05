@@ -1,11 +1,20 @@
-"""The public side: anonymous respondents filling in a shared survey."""
+"""The public side: anonymous respondents filling in a shared survey.
 
-from flask import Blueprint, abort, render_template
+Progress through a survey lives in the signed session cookie under
+``survey:<token>``: the response key and the page the respondent is on. The
+response row itself is created when the first page is submitted, so people
+who only open the link do not show up as abandoned responses.
+"""
+
+import secrets
+
+from flask import Blueprint, abort, redirect, render_template, request, session, url_for
 from sqlalchemy import select
 
 from .domain import sharing
+from .domain.answers import parse_page
 from .extensions import db
-from .models import Survey
+from .models import Answer, Page, Response, Survey, utcnow
 
 bp = Blueprint("public", __name__, url_prefix="/s")
 
@@ -17,17 +26,120 @@ def get_survey_by_token(token: str) -> Survey:
     return survey
 
 
+def session_key(survey: Survey) -> str:
+    return f"survey:{survey.share_token}"
+
+
+def load_state(survey: Survey) -> dict:
+    return dict(session.get(session_key(survey), {}))
+
+
+def save_state(survey: Survey, state: dict) -> None:
+    session[session_key(survey)] = state
+
+
+def find_response(survey: Survey, state: dict) -> Response | None:
+    key = state.get("key")
+    if not key:
+        return None
+    return db.session.scalar(select(Response).filter_by(survey_id=survey.id, key=key))
+
+
+def current_page(survey: Survey, state: dict) -> Page:
+    page_id = state.get("page_id")
+    for page in survey.pages:
+        if page.id == page_id:
+            return page
+    return survey.pages[0]
+
+
+def next_page(survey: Survey, page: Page) -> Page | None:
+    index = survey.pages.index(page)
+    return survey.pages[index + 1] if index + 1 < len(survey.pages) else None
+
+
+def store_answers(response: Response, parsed) -> None:
+    for answer in parsed:
+        if answer.is_empty:
+            continue
+        if answer.choice_ids:
+            for choice_id in answer.choice_ids:
+                response.answers.append(Answer(question_id=answer.question_id, choice_id=choice_id))
+        else:
+            response.answers.append(
+                Answer(
+                    question_id=answer.question_id,
+                    text_value=answer.text,
+                    number_value=answer.number,
+                    date_value=answer.day,
+                )
+            )
+
+
+def render_page(survey: Survey, page: Page, values=None, errors=None, status=200):
+    html = render_template(
+        "public/page.html",
+        survey=survey,
+        page=page,
+        page_number=survey.pages.index(page) + 1,
+        values=values or {},
+        errors=errors or {},
+    )
+    return html, status
+
+
 @bp.get("/<token>")
 def show(token: str):
     survey = get_survey_by_token(token)
     if not sharing.is_accepting_responses(survey):
         return render_template("public/closed.html", survey=survey), 410
-    page = survey.pages[0]
-    return render_template(
-        "public/page.html",
-        survey=survey,
-        page=page,
-        page_number=1,
-        values={},
-        errors={},
-    )
+    state = load_state(survey)
+    if state.get("done"):
+        return redirect(url_for("public.thanks", token=token))
+    return render_page(survey, current_page(survey, state))
+
+
+@bp.post("/<token>")
+def submit(token: str):
+    survey = get_survey_by_token(token)
+    if not sharing.is_accepting_responses(survey):
+        return render_template("public/closed.html", survey=survey), 410
+    state = load_state(survey)
+    if state.get("done"):
+        return redirect(url_for("public.thanks", token=token))
+
+    page = current_page(survey, state)
+    if request.form.get("page_id") != str(page.id):
+        # A stale form (another tab, browser back button): show the current page.
+        return redirect(url_for("public.show", token=token))
+
+    parsed, errors = parse_page(page.questions, request.form)
+    if errors:
+        values = {q.id: request.form.getlist(f"q{q.id}") for q in page.questions}
+        return render_page(survey, page, values, errors, status=422)
+
+    response = find_response(survey, state)
+    if response is None:
+        response = Response(survey=survey, key=secrets.token_hex(16))
+        db.session.add(response)
+        state["key"] = response.key
+    store_answers(response, parsed)
+
+    following = next_page(survey, page)
+    if following is None:
+        response.completed_at = utcnow()
+        state["done"] = True
+    else:
+        state["page_id"] = following.id
+    db.session.commit()
+    save_state(survey, state)
+
+    if state.get("done"):
+        return redirect(url_for("public.thanks", token=token))
+    return redirect(url_for("public.show", token=token))
+
+
+@bp.get("/<token>/thanks")
+def thanks(token: str):
+    survey = get_survey_by_token(token)
+    return render_template("public/thanks.html", survey=survey)
