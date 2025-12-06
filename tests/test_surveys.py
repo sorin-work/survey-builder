@@ -71,3 +71,25 @@ def test_cannot_delete_someone_elses_survey(auth_client, db):
     survey = make_survey(make_user("other@example.com"))
     assert auth_client.post(f"/surveys/{survey.id}/delete").status_code == 404
     assert db.session.query(Survey).count() == 1
+
+
+def test_custom_thank_you_message(auth_client, owner, db, client):
+    from factories import make_published_survey
+
+    survey = make_published_survey(owner)
+    auth_client.post(
+        f"/surveys/{survey.id}/settings",
+        data={"title": survey.title, "thank_you_message": "See you at the meetup!"},
+    )
+    db.session.refresh(survey)
+    assert survey.thank_you_message == "See you at the meetup!"
+    resp = auth_client.get(f"/s/{survey.share_token}/thanks")
+    assert b"See you at the meetup!" in resp.data
+
+
+def test_thank_you_message_length_is_limited(auth_client, owner):
+    survey = make_survey(owner)
+    resp = auth_client.post(
+        f"/surveys/{survey.id}/settings", data={"title": "T", "thank_you_message": "x" * 2001}
+    )
+    assert resp.status_code == 422

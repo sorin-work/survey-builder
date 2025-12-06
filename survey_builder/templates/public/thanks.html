@@ -2,6 +2,10 @@
 {% block content %}
   <section class="card thanks">
     <h1>Thank you!</h1>
-    <p>Your answers to <strong>{{ survey.title }}</strong> have been recorded.</p>
+    {% if survey.thank_you_message %}
+      <p class="thank-you-message">{{ survey.thank_you_message }}</p>
+    {% else %}
+      <p>Your answers to <strong>{{ survey.title }}</strong> have been recorded.</p>
+    {% endif %}
   </section>
 {% endblock %}

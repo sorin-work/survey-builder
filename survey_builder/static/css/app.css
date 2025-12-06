@@ -431,3 +431,7 @@ input.question-prompt {
   font-size: 0.85rem;
   padding: 2rem 0;
 }
+
+.thank-you-message {
+  white-space: pre-line;
+}

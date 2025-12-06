@@ -43,6 +43,7 @@ class Survey(db.Model):
     owner_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     title: Mapped[str] = mapped_column(String(200))
     description: Mapped[str] = mapped_column(Text, default="")
+    thank_you_message: Mapped[str] = mapped_column(Text, default="", server_default="")
     status: Mapped[str] = mapped_column(String(20), default="draft")
     share_token: Mapped[str | None] = mapped_column(String(32), unique=True)
     published_at: Mapped[datetime | None] = mapped_column(DateTime)

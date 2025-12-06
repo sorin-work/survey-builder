@@ -14,6 +14,14 @@
         <label for="description">Description <span class="muted">(optional)</span></label>
         <textarea id="description" name="description" rows="3">{{ form.description }}</textarea>
       </div>
+      {% if survey %}
+        <div class="field">
+          <label for="thank_you_message">Thank-you message <span class="muted">(shown after submitting)</span></label>
+          <textarea id="thank_you_message" name="thank_you_message" rows="3"
+                    placeholder="Your answers have been recorded.">{{ form.thank_you_message }}</textarea>
+          {% if errors.thank_you_message %}<div class="field-error">{{ errors.thank_you_message }}</div>{% endif %}
+        </div>
+      {% endif %}
       <button class="btn" type="submit">{{ "Save" if survey else "Create survey" }}</button>
       <a class="btn btn-secondary" href="{{ url_for('surveys.dashboard') }}">Cancel</a>
     </form>

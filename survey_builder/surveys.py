@@ -24,12 +24,17 @@ def get_owned_survey(survey_id: int) -> Survey:
     return survey
 
 
-def validate_survey_form(title: str) -> dict[str, str]:
+THANK_YOU_MAX = 2000
+
+
+def validate_survey_form(title: str, thank_you: str = "") -> dict[str, str]:
     errors = {}
     if not title:
         errors["title"] = "Give your survey a title."
     elif len(title) > TITLE_MAX:
         errors["title"] = f"Title must be at most {TITLE_MAX} characters."
+    if len(thank_you) > THANK_YOU_MAX:
+        errors["thank_you_message"] = f"Keep the message under {THANK_YOU_MAX} characters."
     return errors
 
 
@@ -65,17 +70,23 @@ def create():
 @bp.route("/<int:survey_id>/settings", methods=["GET", "POST"])
 def edit(survey_id: int):
     survey = get_owned_survey(survey_id)
-    form = {"title": survey.title, "description": survey.description}
+    form = {
+        "title": survey.title,
+        "description": survey.description,
+        "thank_you_message": survey.thank_you_message,
+    }
     errors: dict[str, str] = {}
     if request.method == "POST":
         form = {
             "title": request.form.get("title", "").strip(),
             "description": request.form.get("description", "").strip(),
+            "thank_you_message": request.form.get("thank_you_message", "").strip(),
         }
-        errors = validate_survey_form(form["title"])
+        errors = validate_survey_form(form["title"], form["thank_you_message"])
         if not errors:
             survey.title = form["title"]
             survey.description = form["description"]
+            survey.thank_you_message = form["thank_you_message"]
             db.session.commit()
             flash("Survey updated.", "success")
             return redirect(url_for("surveys.dashboard"))
