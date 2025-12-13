@@ -93,3 +93,24 @@ def test_closed_survey_rejects_submissions(client, owner, db):
     db.session.commit()
     resp = client.post(f"/s/{survey.share_token}", data={"page_id": survey.pages[0].id})
     assert resp.status_code == 410
+
+
+def test_back_returns_to_previous_page_with_saved_answers(client, owner, db):
+    survey = two_page_survey(owner)
+    page1, page2, name, pets, *_ = ids(survey)
+    url = f"/s/{survey.share_token}"
+    client.post(url, data={"page_id": page1.id, f"q{name.id}": "Ana"})
+    assert b"Back" in client.get(url).data
+
+    resp = client.post(f"{url}/back")
+    assert resp.status_code == 302
+    html = client.get(url).get_data(as_text=True)
+    assert "Page 1 of 2" in html
+    assert 'value="Ana"' in html
+
+
+def test_back_on_first_page_does_nothing(client, owner):
+    survey = two_page_survey(owner)
+    url = f"/s/{survey.share_token}"
+    client.post(f"{url}/back")
+    assert "Page 1 of 2" in client.get(url).get_data(as_text=True)

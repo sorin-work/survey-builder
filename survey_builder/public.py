@@ -76,7 +76,30 @@ def store_answers(response: Response, parsed) -> None:
             )
 
 
-def render_page(survey: Survey, page: Page, values=None, errors=None, status=200):
+def saved_values(response: Response | None, page: Page) -> dict[int, list[str]]:
+    """Answers already stored for a page, in the shape the form fields expect."""
+    if response is None:
+        return {}
+    question_ids = {q.id for q in page.questions}
+    values: dict[int, list[str]] = {}
+    for answer in response.answers:
+        if answer.question_id not in question_ids:
+            continue
+        if answer.choice_id is not None:
+            raw = str(answer.choice_id)
+        elif answer.number_value is not None:
+            raw = str(answer.number_value)
+        elif answer.date_value is not None:
+            raw = answer.date_value.isoformat()
+        else:
+            raw = answer.text_value or ""
+        values.setdefault(answer.question_id, []).append(raw)
+    return values
+
+
+def render_page(
+    survey: Survey, page: Page, values=None, errors=None, status=200, can_go_back=False
+):
     html = render_template(
         "public/page.html",
         survey=survey,
@@ -84,6 +107,7 @@ def render_page(survey: Survey, page: Page, values=None, errors=None, status=200
         page_number=survey.pages.index(page) + 1,
         values=values or {},
         errors=errors or {},
+        can_go_back=can_go_back,
     )
     return html, status
 
@@ -96,7 +120,9 @@ def show(token: str):
     state = load_state(survey)
     if state.get("done"):
         return redirect(url_for("public.thanks", token=token))
-    return render_page(survey, current_page(survey, state))
+    page = current_page(survey, state)
+    values = saved_values(find_response(survey, state), page)
+    return render_page(survey, page, values, can_go_back=bool(state.get("history")))
 
 
 @bp.post("/<token>")
@@ -116,7 +142,9 @@ def submit(token: str):
     parsed, errors = parse_page(page.questions, request.form)
     if errors:
         values = {q.id: request.form.getlist(f"q{q.id}") for q in page.questions}
-        return render_page(survey, page, values, errors, status=422)
+        return render_page(
+            survey, page, values, errors, status=422, can_go_back=bool(state.get("history"))
+        )
 
     response = find_response(survey, state)
     if response is None:
@@ -131,11 +159,24 @@ def submit(token: str):
         state["done"] = True
     else:
         state["page_id"] = following.id
+        state["history"] = [*state.get("history", []), page.id]
     db.session.commit()
     save_state(survey, state)
 
     if state.get("done"):
         return redirect(url_for("public.thanks", token=token))
+    return redirect(url_for("public.show", token=token))
+
+
+@bp.post("/<token>/back")
+def back(token: str):
+    survey = get_survey_by_token(token)
+    state = load_state(survey)
+    history = list(state.get("history", []))
+    if history and not state.get("done"):
+        state["page_id"] = history.pop()
+        state["history"] = history
+        save_state(survey, state)
     return redirect(url_for("public.show", token=token))
 
 
