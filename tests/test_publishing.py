@@ -50,3 +50,12 @@ def test_close_and_reopen_keep_the_same_link(auth_client, owner, db):
 def test_cannot_publish_someone_elses_survey(auth_client, db):
     survey = with_question(db, make_survey(make_user("other@example.com")))
     assert auth_client.post(f"/surveys/{survey.id}/publish").status_code == 404
+
+
+def test_editor_shows_share_link_once_published(auth_client, owner, db):
+    survey = with_question(db, make_survey(owner))
+    assert b"Share link" not in auth_client.get(f"/surveys/{survey.id}/edit").data
+    auth_client.post(f"/surveys/{survey.id}/publish")
+    db.session.refresh(survey)
+    html = auth_client.get(f"/surveys/{survey.id}/edit").get_data(as_text=True)
+    assert f"http://localhost/s/{survey.share_token}" in html

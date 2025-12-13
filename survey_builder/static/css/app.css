@@ -435,3 +435,15 @@ input.question-prompt {
 .thank-you-message {
   white-space: pre-line;
 }
+
+.share-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.share-row input {
+  flex: 1;
+  font-family: ui-monospace, monospace;
+  font-size: 0.9rem;
+}

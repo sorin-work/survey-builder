@@ -22,6 +22,21 @@
     </div>
   </div>
 
+  {% if survey.share_token and survey.status != "draft" %}
+    {% set share_url = url_for('public.show', token=survey.share_token, _external=True) %}
+    <section class="card share">
+      <div>
+        <strong>Share link</strong>
+        <span class="badge badge-{{ survey.status }}">{{ survey.status }}</span>
+      </div>
+      <div class="share-row">
+        <input type="text" id="share-url" value="{{ share_url }}" readonly aria-label="Share link">
+        <button class="btn btn-secondary" type="button" data-copy="#share-url">Copy</button>
+        <a class="btn btn-secondary" href="{{ share_url }}" target="_blank" rel="noopener">Open</a>
+      </div>
+    </section>
+  {% endif %}
+
   <div id="pages">
     {% for page in survey.pages %}
       {% include "editor/_page.html" %}
@@ -34,4 +49,7 @@
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <button class="btn btn-secondary" type="submit">+ Add page</button>
   </form>
+{% endblock %}
+{% block scripts %}
+  <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
 {% endblock %}
