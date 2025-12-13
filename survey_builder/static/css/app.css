@@ -447,3 +447,11 @@ input.question-prompt {
   font-family: ui-monospace, monospace;
   font-size: 0.9rem;
 }
+
+.preview-banner {
+  background: #fff9db;
+  border: 1px solid #ffe066;
+  border-radius: var(--radius);
+  padding: 0.6rem 1rem;
+  margin-bottom: 1rem;
+}

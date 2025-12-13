@@ -7,6 +7,7 @@
       <h1>{{ survey.title }}</h1>
     </div>
     <div class="header-actions">
+      <a class="btn btn-secondary" href="{{ url_for('editor.preview', survey_id=survey.id) }}">Preview</a>
       <a class="btn btn-secondary" href="{{ url_for('surveys.edit', survey_id=survey.id) }}">Settings</a>
       {% if survey.status == "published" %}
         <form method="post" action="{{ url_for('surveys.close', survey_id=survey.id) }}">

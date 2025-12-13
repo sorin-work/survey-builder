@@ -8,6 +8,7 @@ working without JavaScript.
 from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
 from flask_login import login_required
 
+from .domain.answers import parse_page
 from .domain.question_types import default_settings, get_type
 from .domain.settings import parse_settings
 from .extensions import db
@@ -247,3 +248,30 @@ def move_question(survey_id: int, question_id: int):
     if is_htmx():
         return render_template("editor/_page.html", survey=survey, page=page)
     return back_to_editor(survey, f"question-{question.id}")
+
+
+@bp.route("/preview", methods=["GET", "POST"])
+def preview(survey_id: int):
+    """Walk through the survey like a respondent would, without saving anything."""
+    survey = get_owned_survey(survey_id)
+    index = request.args.get("page", 1, type=int) - 1
+    index = min(max(index, 0), len(survey.pages) - 1)
+    page = survey.pages[index]
+    values, errors = {}, {}
+    if request.method == "POST":
+        _, errors = parse_page(page.questions, request.form)
+        if not errors:
+            if index + 1 < len(survey.pages):
+                return redirect(url_for("editor.preview", survey_id=survey.id, page=index + 2))
+            flash("That was the last page. Nothing was saved in preview mode.", "success")
+            return back_to_editor(survey)
+        values = {q.id: request.form.getlist(f"q{q.id}") for q in page.questions}
+    return render_template(
+        "public/page.html",
+        survey=survey,
+        page=page,
+        page_number=index + 1,
+        values=values,
+        errors=errors,
+        preview=True,
+    ), (422 if errors else 200)
