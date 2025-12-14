@@ -31,6 +31,11 @@
         </div>
 
         {% if question.type in ("single_choice", "multiple_choice", "rating", "nps") %}
+          <div class="chart-wrap">
+            <canvas data-chart='{{ {"kind": "pie" if question.type == "single_choice" else "bar",
+                                    "labels": summary.labels, "counts": summary.counts}|tojson }}'
+                    aria-label="Chart of answers to {{ question.prompt }}" role="img"></canvas>
+          </div>
           {% if summary.average is not none %}
             <p class="average">Average <strong>{{ summary.average }}</strong></p>
           {% endif %}
@@ -56,6 +61,10 @@
           {% endif %}
         {% elif question.type == "date" %}
           {% if summary.earliest %}
+            <div class="chart-wrap">
+              <canvas data-chart='{{ {"kind": "bar", "labels": summary.labels, "counts": summary.counts}|tojson }}'
+                      aria-label="Answers by month" role="img"></canvas>
+            </div>
             <p>Earliest <strong>{{ summary.earliest.isoformat() }}</strong>, latest <strong>{{ summary.latest.isoformat() }}</strong></p>
           {% else %}
             <p class="muted">No answers yet.</p>
@@ -64,4 +73,8 @@
       </section>
     {% endfor %}
   {% endif %}
+{% endblock %}
+{% block scripts %}
+  <script src="{{ url_for('static', filename='vendor/chart.umd.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
 {% endblock %}

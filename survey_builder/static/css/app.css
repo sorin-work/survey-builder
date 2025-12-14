@@ -510,3 +510,9 @@ input.question-prompt {
 .text-answers li {
   margin-bottom: 0.35rem;
 }
+
+.chart-wrap {
+  position: relative;
+  height: 220px;
+  margin-bottom: 0.75rem;
+}

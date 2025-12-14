@@ -37,3 +37,16 @@ def test_results_show_counts_and_texts(auth_client, owner):
 def test_results_are_owner_only(auth_client, db):
     survey = build(make_user("other@example.com"))
     assert auth_client.get(f"/surveys/{survey.id}/results/").status_code == 404
+
+
+def test_charts_carry_their_data(auth_client, owner):
+    import json
+    import re
+
+    survey = build(owner)
+    plan = survey.questions[0]
+    add_response(survey, {plan: "Free"})
+    html = auth_client.get(f"/surveys/{survey.id}/results/").get_data(as_text=True)
+    specs = [json.loads(m) for m in re.findall(r"data-chart='([^']+)'", html)]
+    assert {"kind": "pie", "labels": ["Free", "Pro"], "counts": [1, 0]} in specs
+    assert "chart.umd.min.js" in html
