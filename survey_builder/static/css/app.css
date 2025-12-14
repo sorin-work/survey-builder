@@ -455,3 +455,58 @@ input.question-prompt {
   padding: 0.6rem 1rem;
   margin-bottom: 1rem;
 }
+
+/* Results */
+
+.stats {
+  display: flex;
+  gap: 2rem;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+.result-header h2 {
+  font-size: 1.1rem;
+  margin: 0 0 0.5rem;
+}
+
+.result-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.result-table th,
+.result-table td {
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.result-table .num {
+  text-align: right;
+  width: 6rem;
+}
+
+.text-answers {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.text-answers li {
+  margin-bottom: 0.35rem;
+}

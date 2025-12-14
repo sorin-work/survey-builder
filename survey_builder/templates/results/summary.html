@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Results · {{ survey.title }}{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div>
+      <a class="muted" href="{{ url_for('editor.edit', survey_id=survey.id) }}">&larr; Back to the editor</a>
+      <h1>{{ survey.title }}</h1>
+    </div>
+  </div>
+
+  <section class="card stats">
+    <div class="stat"><span class="stat-value">{{ total }}</span><span class="muted">completed responses</span></div>
+  </section>
+
+  {% if not total %}
+    <div class="card empty">
+      <p>No responses yet.</p>
+      {% if survey.status == "published" %}
+        <p class="muted">Share the survey link to start collecting answers.</p>
+      {% else %}
+        <p class="muted">Publish the survey to get a link you can share.</p>
+      {% endif %}
+    </div>
+  {% else %}
+    {% for summary in summaries %}
+      {% set question = summary.question %}
+      <section class="card result" id="result-{{ question.id }}">
+        <div class="result-header">
+          <h2>{{ question.prompt }}</h2>
+          <span class="muted">{{ summary.answered }} answered &middot; {{ QUESTION_TYPES[question.type].label }}</span>
+        </div>
+
+        {% if question.type in ("single_choice", "multiple_choice", "rating", "nps") %}
+          {% if summary.average is not none %}
+            <p class="average">Average <strong>{{ summary.average }}</strong></p>
+          {% endif %}
+          <table class="result-table">
+            <thead><tr><th>Answer</th><th class="num">Count</th><th class="num">Share</th></tr></thead>
+            <tbody>
+              {% for label in summary.labels %}
+                <tr>
+                  <td>{{ label }}</td>
+                  <td class="num">{{ summary.counts[loop.index0] }}</td>
+                  <td class="num">{{ summary.percentages[loop.index0] }}%</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% elif question.type in ("short_text", "long_text") %}
+          {% if summary.texts %}
+            <ul class="text-answers">
+              {% for text in summary.texts %}<li>{{ text }}</li>{% endfor %}
+            </ul>
+          {% else %}
+            <p class="muted">No answers yet.</p>
+          {% endif %}
+        {% elif question.type == "date" %}
+          {% if summary.earliest %}
+            <p>Earliest <strong>{{ summary.earliest.isoformat() }}</strong>, latest <strong>{{ summary.latest.isoformat() }}</strong></p>
+          {% else %}
+            <p class="muted">No answers yet.</p>
+          {% endif %}
+        {% endif %}
+      </section>
+    {% endfor %}
+  {% endif %}
+{% endblock %}

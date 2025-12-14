@@ -55,6 +55,7 @@ def add_response(survey: Survey, answers: dict, completed=True, when=None):
     from survey_builder.models import Answer, Response, utcnow
 
     response = Response(survey=survey, key=secrets.token_hex(8))
+    db.session.add(response)
     if completed:
         response.completed_at = when or utcnow()
     for question, value in answers.items():

@@ -16,6 +16,7 @@ def test_response_with_answers(db, owner):
     db.session.commit()
 
     response = Response(survey=survey, key="abc123")
+    db.session.add(response)
     response.answers = [
         Answer(question=text_q, text_value="Ana"),
         Answer(question=multi_q, choice=multi_q.choices[0]),
