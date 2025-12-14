@@ -44,3 +44,31 @@ def make_published_survey(owner: User, questions_by_page=None, title="Customer f
     db.session.add(survey)
     db.session.commit()
     return survey
+
+
+def add_response(survey: Survey, answers: dict, completed=True, when=None):
+    """Store a response. ``answers`` maps a Question to a value: a str for text,
+    an int for rating/NPS, a date, or a choice label / list of labels."""
+    import secrets
+    from datetime import date
+
+    from survey_builder.models import Answer, Response, utcnow
+
+    response = Response(survey=survey, key=secrets.token_hex(8))
+    if completed:
+        response.completed_at = when or utcnow()
+    for question, value in answers.items():
+        if question.type in ("single_choice", "multiple_choice"):
+            labels = value if isinstance(value, list) else [value]
+            by_label = {c.label: c for c in question.choices}
+            for label in labels:
+                response.answers.append(Answer(question=question, choice=by_label[label]))
+        elif isinstance(value, date):
+            response.answers.append(Answer(question=question, date_value=value))
+        elif isinstance(value, int):
+            response.answers.append(Answer(question=question, number_value=value))
+        else:
+            response.answers.append(Answer(question=question, text_value=value))
+    db.session.add(response)
+    db.session.commit()
+    return response
