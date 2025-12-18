@@ -23,12 +23,40 @@ class QuestionSummary:
     texts: list[str] = field(default_factory=list)
     earliest: object = None
     latest: object = None
+    nps: "NpsScore | None" = None
 
     @property
     def percentages(self) -> list[float]:
         if not self.answered:
             return [0.0 for _ in self.counts]
         return [round(100 * count / self.answered, 1) for count in self.counts]
+
+
+@dataclass(frozen=True)
+class NpsScore:
+    promoters: int
+    passives: int
+    detractors: int
+
+    @property
+    def total(self) -> int:
+        return self.promoters + self.passives + self.detractors
+
+    @property
+    def score(self) -> int | None:
+        """Net Promoter Score: % promoters minus % detractors, from -100 to 100."""
+        if not self.total:
+            return None
+        return (self.promoters - self.detractors) * 100 // self.total
+
+
+def nps_score(values) -> NpsScore:
+    values = list(values)
+    return NpsScore(
+        promoters=sum(1 for v in values if v >= 9),
+        passives=sum(1 for v in values if 7 <= v <= 8),
+        detractors=sum(1 for v in values if v <= 6),
+    )
 
 
 def completed_response_count(survey) -> int:
@@ -99,6 +127,7 @@ def summarize(survey) -> list[QuestionSummary]:
             _summarize_scale(summary, answers, 1, (question.settings or {}).get("scale", 5))
         elif question.type == NPS:
             _summarize_scale(summary, answers, 0, 10)
+            summary.nps = nps_score(a.number_value for a in answers if a.number_value is not None)
         elif question.type in (SHORT_TEXT, LONG_TEXT):
             _summarize_text(summary, answers)
         elif question.type == DATE:

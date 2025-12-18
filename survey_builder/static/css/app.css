@@ -516,3 +516,34 @@ input.question-prompt {
   height: 220px;
   margin-bottom: 0.75rem;
 }
+
+.nps {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.nps-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.nps-groups {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.nps-promoters {
+  color: var(--success);
+}
+
+.nps-passives {
+  color: var(--muted);
+}
+
+.nps-detractors {
+  color: var(--danger);
+}

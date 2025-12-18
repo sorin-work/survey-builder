@@ -36,7 +36,17 @@
                                     "labels": summary.labels, "counts": summary.counts}|tojson }}'
                     aria-label="Chart of answers to {{ question.prompt }}" role="img"></canvas>
           </div>
-          {% if summary.average is not none %}
+          {% if summary.nps and summary.nps.total %}
+            <div class="nps">
+              <div class="nps-score"><span class="stat-value">{{ summary.nps.score }}</span><span class="muted">NPS</span></div>
+              <div class="nps-groups">
+                <span class="nps-promoters">Promoters {{ summary.nps.promoters }}</span>
+                <span class="nps-passives">Passives {{ summary.nps.passives }}</span>
+                <span class="nps-detractors">Detractors {{ summary.nps.detractors }}</span>
+              </div>
+            </div>
+          {% endif %}
+          {% if summary.average is not none and question.type != "nps" %}
             <p class="average">Average <strong>{{ summary.average }}</strong></p>
           {% endif %}
           <table class="result-table">
