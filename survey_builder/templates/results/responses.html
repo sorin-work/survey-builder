@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Responses · {{ survey.title }}{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div>
+      <a class="muted" href="{{ url_for('editor.edit', survey_id=survey.id) }}">&larr; Back to the editor</a>
+      <h1>{{ survey.title }}</h1>
+    </div>
+  </div>
+  {% with active = "responses" %}{% include "results/_tabs.html" %}{% endwith %}
+
+  {% if not responses %}
+    <div class="card empty"><p>No completed responses yet.</p></div>
+  {% else %}
+    <table class="card result-table responses-table">
+      <thead><tr><th>#</th><th>Submitted</th><th class="num">Answers</th></tr></thead>
+      <tbody>
+        {% for response in responses %}
+          <tr>
+            <td>{{ response.id }}</td>
+            <td>{{ response.completed_at.strftime("%Y-%m-%d %H:%M") }} UTC</td>
+            <td class="num">{{ response.answers|length }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% if pagination.pages > 1 %}
+      <nav class="pager">
+        {% if pagination.has_prev %}
+          <a href="{{ url_for('results.responses', survey_id=survey.id, page=pagination.page - 1) }}">&larr; Newer</a>
+        {% endif %}
+        <span class="muted">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+        {% if pagination.has_next %}
+          <a href="{{ url_for('results.responses', survey_id=survey.id, page=pagination.page + 1) }}">Older &rarr;</a>
+        {% endif %}
+      </nav>
+    {% endif %}
+  {% endif %}
+{% endblock %}

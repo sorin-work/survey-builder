@@ -8,6 +8,8 @@
     </div>
   </div>
 
+  {% with active = "summary" %}{% include "results/_tabs.html" %}{% endwith %}
+
   <section class="card stats">
     <div class="stat"><span class="stat-value">{{ total }}</span><span class="muted">completed responses</span></div>
   </section>

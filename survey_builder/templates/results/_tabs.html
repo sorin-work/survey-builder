@@ -1,0 +1,6 @@
+<nav class="tabs">
+  <a href="{{ url_for('results.summary', survey_id=survey.id) }}"
+     {% if active == "summary" %}class="active"{% endif %}>Summary</a>
+  <a href="{{ url_for('results.responses', survey_id=survey.id) }}"
+     {% if active == "responses" %}class="active"{% endif %}>Responses</a>
+</nav>
