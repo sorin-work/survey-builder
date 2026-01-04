@@ -577,3 +577,16 @@ input.question-prompt {
   gap: 1rem;
   margin: 1rem 0;
 }
+
+.answers dt {
+  font-weight: 600;
+  margin-top: 0.75rem;
+}
+
+.answers dd {
+  margin: 0.15rem 0 0;
+}
+
+.text-answer {
+  white-space: pre-line;
+}

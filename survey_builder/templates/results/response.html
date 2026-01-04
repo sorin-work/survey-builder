@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Response #{{ response.id }} · {{ survey.title }}{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div>
+      <a class="muted" href="{{ url_for('results.responses', survey_id=survey.id) }}">&larr; All responses</a>
+      <h1>Response #{{ response.id }}</h1>
+      <p class="muted">
+        {% if response.completed_at %}Submitted {{ response.completed_at.strftime("%Y-%m-%d %H:%M") }} UTC
+        {% else %}Not finished{% endif %}
+      </p>
+    </div>
+  </div>
+
+  {% for page in survey.pages %}
+    <section class="card">
+      {% if page.title %}<h2>{{ page.title }}</h2>{% endif %}
+      <dl class="answers">
+        {% for question in page.questions %}
+          {% set answers = by_question.get(question.id, []) %}
+          <dt>{{ question.prompt }}</dt>
+          <dd>
+            {% if not answers %}<span class="muted">No answer</span>
+            {% elif question.type in ("single_choice", "multiple_choice") %}
+              {{ answers|map(attribute="choice.label")|join(", ") }}
+            {% elif question.type in ("rating", "nps") %}
+              {{ answers[0].number_value }}{% if question.type == "rating" %} / {{ question.settings.scale or 5 }}{% endif %}
+            {% elif question.type == "date" %}
+              {{ answers[0].date_value.isoformat() }}
+            {% else %}
+              <span class="text-answer">{{ answers[0].text_value }}</span>
+            {% endif %}
+          </dd>
+        {% endfor %}
+      </dl>
+    </section>
+  {% endfor %}
+{% endblock %}

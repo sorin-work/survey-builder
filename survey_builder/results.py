@@ -1,6 +1,6 @@
 """Owner-facing results: summaries, individual responses and exports."""
 
-from flask import Blueprint, render_template, request
+from flask import Blueprint, abort, render_template, request
 from flask_login import login_required
 from sqlalchemy import select
 
@@ -45,4 +45,18 @@ def responses(survey_id: int):
     ).all()
     return render_template(
         "results/responses.html", survey=survey, responses=rows, pagination=pagination
+    )
+
+
+@bp.get("/responses/<int:response_id>")
+def response_detail(survey_id: int, response_id: int):
+    survey = get_owned_survey(survey_id)
+    response = db.session.get(Response, response_id)
+    if response is None:
+        abort(404)
+    by_question: dict[int, list] = {}
+    for answer in response.answers:
+        by_question.setdefault(answer.question_id, []).append(answer)
+    return render_template(
+        "results/response.html", survey=survey, response=response, by_question=by_question
     )
