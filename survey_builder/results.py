@@ -1,6 +1,6 @@
 """Owner-facing results: summaries, individual responses and exports."""
 
-from flask import Blueprint, abort, render_template, request
+from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
 from flask_login import login_required
 from sqlalchemy import select
 
@@ -60,3 +60,15 @@ def response_detail(survey_id: int, response_id: int):
     return render_template(
         "results/response.html", survey=survey, response=response, by_question=by_question
     )
+
+
+@bp.post("/responses/<int:response_id>/delete")
+def delete_response(survey_id: int, response_id: int):
+    survey = get_owned_survey(survey_id)
+    response = db.session.get(Response, response_id)
+    if response is None or response.survey_id != survey.id:
+        abort(404)
+    db.session.delete(response)
+    db.session.commit()
+    flash(f"Response #{response_id} deleted.", "success")
+    return redirect(url_for("results.responses", survey_id=survey.id))

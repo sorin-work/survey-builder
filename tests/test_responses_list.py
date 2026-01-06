@@ -66,3 +66,25 @@ def test_response_detail_shows_every_answer(auth_client, owner):
 def test_response_detail_unknown_id(auth_client, owner):
     survey = make_published_survey(owner)
     assert auth_client.get(f"/surveys/{survey.id}/results/responses/999").status_code == 404
+
+
+def test_delete_response(auth_client, owner, db):
+    from survey_builder.models import Answer, Response
+
+    survey = make_published_survey(owner)
+    response = add_response(survey, {survey.questions[0]: "spam"})
+    resp = auth_client.post(f"/surveys/{survey.id}/results/responses/{response.id}/delete")
+    assert resp.status_code == 302
+    assert db.session.query(Response).count() == 0
+    assert db.session.query(Answer).count() == 0
+
+
+def test_cannot_delete_response_of_another_survey(auth_client, owner, db):
+    from survey_builder.models import Response
+
+    mine = make_published_survey(owner, title="Mine")
+    theirs = make_published_survey(make_user("other@example.com"), title="Theirs")
+    response = add_response(theirs, {theirs.questions[0]: "keep me"})
+    resp = auth_client.post(f"/surveys/{mine.id}/results/responses/{response.id}/delete")
+    assert resp.status_code == 404
+    assert db.session.query(Response).count() == 1
