@@ -590,3 +590,8 @@ input.question-prompt {
 .text-answer {
   white-space: pre-line;
 }
+
+.tabs a.tabs-action {
+  margin-left: auto;
+  color: var(--accent);
+}

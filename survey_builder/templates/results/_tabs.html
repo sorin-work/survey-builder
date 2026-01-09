@@ -3,4 +3,5 @@
      {% if active == "summary" %}class="active"{% endif %}>Summary</a>
   <a href="{{ url_for('results.responses', survey_id=survey.id) }}"
      {% if active == "responses" %}class="active"{% endif %}>Responses</a>
+  <a class="tabs-action" href="{{ url_for('results.export_csv', survey_id=survey.id) }}">Download CSV</a>
 </nav>

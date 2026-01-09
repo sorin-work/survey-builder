@@ -1,9 +1,21 @@
 """Owner-facing results: summaries, individual responses and exports."""
 
-from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
+from flask import (
+    Blueprint,
+    abort,
+    flash,
+    redirect,
+    render_template,
+    request,
+    url_for,
+)
+from flask import (
+    Response as HttpResponse,
+)
 from flask_login import login_required
 from sqlalchemy import select
 
+from .domain.export import to_csv
 from .domain.pagination import Pagination
 from .domain.results import completed_response_count, summarize
 from .extensions import db
@@ -72,3 +84,18 @@ def delete_response(survey_id: int, response_id: int):
     db.session.commit()
     flash(f"Response #{response_id} deleted.", "success")
     return redirect(url_for("results.responses", survey_id=survey.id))
+
+
+def export_filename(survey) -> str:
+    safe = "".join(ch if ch.isalnum() else "-" for ch in survey.title.lower()).strip("-")
+    return f"{safe or 'survey'}-responses.csv"
+
+
+@bp.get("/export.csv")
+def export_csv(survey_id: int):
+    survey = get_owned_survey(survey_id)
+    return HttpResponse(
+        to_csv(survey),
+        mimetype="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{export_filename(survey)}"'},
+    )

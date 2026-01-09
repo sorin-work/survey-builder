@@ -47,3 +47,20 @@ def test_csv_quotes_commas_and_newlines(owner, db):
     add_response(survey, {survey.questions[0]: 'Pop, Ana "the cat"\nsecond line'})
     parsed = list(csv.reader(io.StringIO(to_csv(survey))))
     assert parsed[1][2] == 'Pop, Ana "the cat"\nsecond line'
+
+
+def test_download_csv(auth_client, owner, db):
+    survey = build(owner)
+    add_response(survey, {survey.questions[0]: "Ana"})
+    resp = auth_client.get(f"/surveys/{survey.id}/results/export.csv")
+    assert resp.status_code == 200
+    assert resp.mimetype == "text/csv"
+    assert 'filename="customer-feedback-responses.csv"' in resp.headers["Content-Disposition"]
+    assert "Ana" in resp.get_data(as_text=True)
+
+
+def test_download_csv_is_owner_only(auth_client, db):
+    from factories import make_user
+
+    survey = build(make_user("other@example.com"))
+    assert auth_client.get(f"/surveys/{survey.id}/results/export.csv").status_code == 404
