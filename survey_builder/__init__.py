@@ -33,6 +33,10 @@ def create_app(config: dict | None = None) -> Flask:
 
     app.jinja_env.globals["QUESTION_TYPES"] = QUESTION_TYPES
 
+    from .cli import register_cli
+
+    register_cli(app)
+
     @app.get("/")
     def index():
         if current_user.is_authenticated:
