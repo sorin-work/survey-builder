@@ -1,0 +1,34 @@
+name: survey-builder
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: surveys
+      POSTGRES_PASSWORD: surveys
+      POSTGRES_DB: surveys
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U surveys -d surveys']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  web:
+    build: .
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://surveys:surveys@db:5432/surveys
+      SECRET_KEY: ${SECRET_KEY:-local-development-secret-change-me}
+      # Creates demo@example.com / demo-password with sample surveys.
+      SEED_DEMO: ${SEED_DEMO:-true}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - '${WEB_PORT:-4416}:8000'
+
+volumes:
+  db-data:
