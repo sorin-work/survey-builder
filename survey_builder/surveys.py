@@ -4,7 +4,7 @@ from sqlalchemy import select
 
 from .domain import sharing
 from .extensions import db
-from .models import Page, Survey, utcnow
+from .models import Page, Response, Survey, utcnow
 
 bp = Blueprint("surveys", __name__, url_prefix="/surveys")
 
@@ -43,7 +43,15 @@ def dashboard():
     surveys = db.session.scalars(
         select(Survey).filter_by(owner_id=current_user.id).order_by(Survey.updated_at.desc())
     ).all()
-    return render_template("surveys/dashboard.html", surveys=surveys)
+    counts = dict(
+        db.session.execute(
+            select(Response.survey_id, db.func.count(Response.id))
+            .join(Survey)
+            .where(Survey.owner_id == current_user.id, Response.completed_at.is_not(None))
+            .group_by(Response.survey_id)
+        ).all()
+    )
+    return render_template("surveys/dashboard.html", surveys=surveys, counts=counts)
 
 
 @bp.route("/new", methods=["GET", "POST"])

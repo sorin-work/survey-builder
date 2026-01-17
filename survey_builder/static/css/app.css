@@ -595,3 +595,8 @@ input.question-prompt {
   margin-left: auto;
   color: var(--accent);
 }
+
+.response-count {
+  float: right;
+  font-size: 0.9rem;
+}

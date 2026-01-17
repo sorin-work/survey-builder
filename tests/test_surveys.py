@@ -93,3 +93,17 @@ def test_thank_you_message_length_is_limited(auth_client, owner):
         f"/surveys/{survey.id}/settings", data={"title": "T", "thank_you_message": "x" * 2001}
     )
     assert resp.status_code == 422
+
+
+def test_dashboard_shows_completed_response_counts(auth_client, owner):
+    from factories import add_response, make_published_survey
+
+    survey = make_published_survey(owner, title="Counted")
+    question = survey.questions[0]
+    add_response(survey, {question: "a"})
+    add_response(survey, {question: "b"})
+    add_response(survey, {question: "c"}, completed=False)
+    make_survey(owner, title="Quiet")
+    html = auth_client.get("/surveys/").get_data(as_text=True)
+    assert "2 responses" in html
+    assert "0 responses" in html
