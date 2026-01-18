@@ -600,3 +600,9 @@ input.question-prompt {
   float: right;
   font-size: 0.9rem;
 }
+
+select.move-page {
+  width: auto;
+  padding: 0.2rem 0.4rem;
+  font-size: 0.85rem;
+}

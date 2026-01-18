@@ -44,6 +44,15 @@
               hx-post="{{ url_for('editor.delete_question', survey_id=survey.id, question_id=question.id) }}"
               hx-target="#question-{{ question.id }}" hx-swap="outerHTML"
               hx-confirm="Delete this question?">Delete</button>
+      {% if survey.pages|length > 1 %}
+        <select class="move-page" name="page_id" aria-label="Move to page"
+                hx-post="{{ url_for('editor.move_question_to_page', survey_id=survey.id, question_id=question.id) }}"
+                hx-trigger="change" hx-include="this">
+          {% for p in survey.pages %}
+            <option value="{{ p.id }}" {% if p.id == question.page_id %}selected{% endif %}>Page {{ loop.index }}</option>
+          {% endfor %}
+        </select>
+      {% endif %}
       <span class="move">
         {% for direction, symbol in (("up", "&uarr;"), ("down", "&darr;")) %}
           <button class="link" type="button" title="Move {{ direction }}"

@@ -250,6 +250,23 @@ def move_question(survey_id: int, question_id: int):
     return back_to_editor(survey, f"question-{question.id}")
 
 
+@bp.post("/questions/<int:question_id>/page")
+def move_question_to_page(survey_id: int, question_id: int):
+    survey = get_owned_survey(survey_id)
+    question = get_question(survey, question_id)
+    target = get_page(survey, request.form.get("page_id", type=int) or 0)
+    source = question.page
+    if target.id != source.id:
+        question.position = len(target.questions)
+        question.page = target  # moves it between the two collections
+        renumber(source.questions)
+        db.session.commit()
+    if is_htmx():
+        # Two pages changed; simplest is to let htmx reload the editor.
+        return "", 204, {"HX-Refresh": "true"}
+    return back_to_editor(survey, f"question-{question.id}")
+
+
 @bp.route("/preview", methods=["GET", "POST"])
 def preview(survey_id: int):
     """Walk through the survey like a respondent would, without saving anything."""

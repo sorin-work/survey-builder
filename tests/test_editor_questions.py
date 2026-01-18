@@ -171,3 +171,39 @@ def test_move_requires_direction(auth_client, owner, db):
     question = survey.pages[0].questions[0]
     resp = auth_client.post(f"/surveys/{survey.id}/questions/{question.id}/move", headers=HX)
     assert resp.status_code == 400
+
+
+def test_move_question_to_another_page(auth_client, owner, db):
+    from survey_builder.models import Page
+
+    survey = make_survey(owner)
+    first = survey.pages[0]
+    first.questions = [
+        Question(type="short_text", prompt=p, position=i) for i, p in enumerate("AB")
+    ]
+    second = Page(position=1)
+    second.questions = [Question(type="short_text", prompt="C", position=0)]
+    survey.pages.append(second)
+    db.session.commit()
+    a = first.questions[0]
+
+    resp = auth_client.post(
+        f"/surveys/{survey.id}/questions/{a.id}/page", data={"page_id": second.id}, headers=HX
+    )
+    assert resp.status_code == 204
+    assert resp.headers["HX-Refresh"] == "true"
+    db.session.expire_all()
+    assert [(q.prompt, q.position) for q in first.questions] == [("B", 0)]
+    assert [(q.prompt, q.position) for q in second.questions] == [("C", 0), ("A", 1)]
+
+
+def test_move_question_to_foreign_page_is_404(auth_client, owner, db):
+    survey = make_survey(owner)
+    add_question(auth_client, survey, "short_text")
+    question = survey.pages[0].questions[0]
+    other = make_survey(make_user("other@example.com"))
+    resp = auth_client.post(
+        f"/surveys/{survey.id}/questions/{question.id}/page",
+        data={"page_id": other.pages[0].id},
+    )
+    assert resp.status_code == 404
