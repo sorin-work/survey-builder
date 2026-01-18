@@ -3,6 +3,7 @@ from flask_login import current_user, login_required
 from sqlalchemy import select
 
 from .domain import sharing
+from .domain.copying import copy_survey
 from .extensions import db
 from .models import Page, Response, Survey, utcnow
 
@@ -136,3 +137,13 @@ def close(survey_id: int):
         db.session.commit()
         flash("The survey no longer accepts responses.", "success")
     return redirect(url_for("editor.edit", survey_id=survey.id))
+
+
+@bp.post("/<int:survey_id>/duplicate")
+def duplicate(survey_id: int):
+    survey = get_owned_survey(survey_id)
+    clone = copy_survey(survey)
+    db.session.add(clone)
+    db.session.commit()
+    flash(f"Created \u201c{clone.title}\u201d as a draft.", "success")
+    return redirect(url_for("editor.edit", survey_id=clone.id))

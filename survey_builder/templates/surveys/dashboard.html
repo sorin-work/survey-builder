@@ -18,6 +18,10 @@
             <a href="{{ url_for('editor.edit', survey_id=survey.id) }}">Edit</a>
             <a href="{{ url_for('results.summary', survey_id=survey.id) }}">Results</a>
             <a href="{{ url_for('surveys.edit', survey_id=survey.id) }}">Settings</a>
+            <form method="post" action="{{ url_for('surveys.duplicate', survey_id=survey.id) }}" class="inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="link" type="submit">Duplicate</button>
+            </form>
           </div>
         </li>
       {% endfor %}
