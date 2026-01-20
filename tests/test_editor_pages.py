@@ -67,3 +67,30 @@ def test_page_from_another_survey_is_404(auth_client, owner):
     other_page = theirs.pages[0]
     resp = auth_client.post(f"/surveys/{mine.id}/pages/{other_page.id}", data={"title": "x"})
     assert resp.status_code == 404
+
+
+def test_move_page_down_and_up(auth_client, owner, db):
+    survey = make_survey(owner)
+    survey.pages[0].title = "A"
+    for title in ("B", "C"):
+        survey.pages.append(Page(title=title, position=len(survey.pages)))
+    db.session.commit()
+    a = survey.pages[0]
+    url = f"/surveys/{survey.id}/pages/{a.id}/move"
+
+    resp = auth_client.post(url, data={"direction": "down"}, headers=HX)
+    assert resp.status_code == 204
+    db.session.expire_all()
+    assert [p.title for p in survey.pages] == ["B", "A", "C"]
+
+    auth_client.post(url, data={"direction": "up"}, headers=HX)
+    auth_client.post(url, data={"direction": "up"}, headers=HX)
+    db.session.expire_all()
+    assert [(p.title, p.position) for p in survey.pages] == [("A", 0), ("B", 1), ("C", 2)]
+
+
+def test_move_page_rejects_bad_direction(auth_client, owner):
+    survey = make_survey(owner)
+    page = survey.pages[0]
+    resp = auth_client.post(f"/surveys/{survey.id}/pages/{page.id}/move", data={"direction": "x"})
+    assert resp.status_code == 400

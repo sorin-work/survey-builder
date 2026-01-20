@@ -94,6 +94,25 @@ def delete_page(survey_id: int, page_id: int):
     return back_to_editor(survey)
 
 
+@bp.post("/pages/<int:page_id>/move")
+def move_page(survey_id: int, page_id: int):
+    survey = get_owned_survey(survey_id)
+    page = get_page(survey, page_id)
+    direction = request.form.get("direction")
+    if direction not in ("up", "down"):
+        abort(400)
+    pages = list(survey.pages)
+    index = pages.index(page)
+    target = index - 1 if direction == "up" else index + 1
+    if 0 <= target < len(pages):
+        pages[index], pages[target] = pages[target], pages[index]
+        renumber(pages)
+        db.session.commit()
+    if is_htmx():
+        return "", 204, {"HX-Refresh": "true"}
+    return back_to_editor(survey, f"page-{page.id}")
+
+
 @bp.post("/pages/<int:page_id>/questions")
 def add_question(survey_id: int, page_id: int):
     survey = get_owned_survey(survey_id)

@@ -1,6 +1,15 @@
 <section class="card editor-page" id="page-{{ page.id }}">
   <div class="editor-page-header">
     {% include "editor/_page_title.html" %}
+    {% if survey.pages|length > 1 %}
+      <span class="move">
+        {% for direction, symbol in (("up", "&uarr;"), ("down", "&darr;")) %}
+          <button class="link" type="button" title="Move page {{ direction }}"
+                  hx-post="{{ url_for('editor.move_page', survey_id=survey.id, page_id=page.id) }}"
+                  hx-vals='{"direction": "{{ direction }}"}'>{{ symbol|safe }}</button>
+        {% endfor %}
+      </span>
+    {% endif %}
     <form method="post" action="{{ url_for('editor.delete_page', survey_id=survey.id, page_id=page.id) }}"
           hx-post="{{ url_for('editor.delete_page', survey_id=survey.id, page_id=page.id) }}"
           hx-target="#page-{{ page.id }}" hx-swap="outerHTML"
