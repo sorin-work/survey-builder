@@ -1,6 +1,10 @@
 """Publishing a survey and deciding whether its public link accepts answers."""
 
 import secrets
+from datetime import datetime, time
+
+from ..models import utcnow
+from .results import completed_response_count
 
 DRAFT = "draft"
 PUBLISHED = "published"
@@ -22,5 +26,27 @@ def publish_problems(survey) -> list[str]:
     return problems
 
 
-def is_accepting_responses(survey) -> bool:
-    return survey.status == PUBLISHED
+# Why a published link does not accept answers.
+REASON_CLOSED = "closed"
+REASON_DRAFT = "draft"
+REASON_DATE = "date"
+REASON_LIMIT = "limit"
+
+
+def closed_reason(survey, now: datetime | None = None) -> str | None:
+    """None when the survey accepts responses, otherwise one of the REASON_* values."""
+    if survey.status == CLOSED:
+        return REASON_CLOSED
+    if survey.status != PUBLISHED:
+        return REASON_DRAFT
+    now = now or utcnow()
+    if survey.closes_on and now >= datetime.combine(survey.closes_on, time.min):
+        return REASON_DATE
+    limit = survey.response_limit
+    if limit is not None and completed_response_count(survey) > limit:
+        return REASON_LIMIT
+    return None
+
+
+def is_accepting_responses(survey, now: datetime | None = None) -> bool:
+    return closed_reason(survey, now) is None

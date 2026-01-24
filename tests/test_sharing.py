@@ -1,0 +1,44 @@
+from datetime import date, datetime
+
+from factories import add_response, make_published_survey
+
+from survey_builder.domain.sharing import closed_reason, is_accepting_responses
+
+
+def test_published_survey_without_limits_is_open(owner, db):
+    survey = make_published_survey(owner)
+    assert closed_reason(survey) is None
+
+
+def test_closed_and_draft_surveys(owner, db):
+    survey = make_published_survey(owner)
+    survey.status = "closed"
+    assert closed_reason(survey) == "closed"
+    survey.status = "draft"
+    assert closed_reason(survey) == "draft"
+
+
+def test_close_date_in_the_past_closes_the_survey(owner, db):
+    survey = make_published_survey(owner)
+    survey.closes_on = date(2026, 1, 10)
+    assert closed_reason(survey, now=datetime(2026, 1, 20, 9, 0)) == "date"
+    assert is_accepting_responses(survey, now=datetime(2026, 1, 5, 9, 0))
+
+
+def test_response_limit(owner, db):
+    survey = make_published_survey(owner)
+    survey.response_limit = 3
+    question = survey.questions[0]
+    add_response(survey, {question: "one"})
+    assert is_accepting_responses(survey)
+    for value in ("two", "three", "four", "five"):
+        add_response(survey, {question: value})
+    assert closed_reason(survey) == "limit"
+
+
+def test_incomplete_responses_do_not_count_towards_limit(owner, db):
+    survey = make_published_survey(owner)
+    survey.response_limit = 1
+    for _ in range(3):
+        add_response(survey, {survey.questions[0]: "x"}, completed=False)
+    assert is_accepting_responses(survey)
