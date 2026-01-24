@@ -21,6 +21,23 @@
                     placeholder="Your answers have been recorded.">{{ form.thank_you_message }}</textarea>
           {% if errors.thank_you_message %}<div class="field-error">{{ errors.thank_you_message }}</div>{% endif %}
         </div>
+        <fieldset class="share-settings">
+          <legend>Collecting responses</legend>
+          <div class="settings-grid">
+            <div class="field">
+              <label for="closes_on">Close on <span class="muted">(optional)</span></label>
+              <input type="date" id="closes_on" name="closes_on" value="{{ form.closes_on }}">
+              <p class="muted small">The link accepts answers until the end of this day.</p>
+              {% if errors.closes_on %}<div class="field-error">{{ errors.closes_on }}</div>{% endif %}
+            </div>
+            <div class="field">
+              <label for="response_limit">Response limit <span class="muted">(optional)</span></label>
+              <input type="number" id="response_limit" name="response_limit" min="1" value="{{ form.response_limit }}">
+              <p class="muted small">Close automatically after this many responses.</p>
+              {% if errors.response_limit %}<div class="field-error">{{ errors.response_limit }}</div>{% endif %}
+            </div>
+          </div>
+        </fieldset>
       {% endif %}
       <button class="btn" type="submit">{{ "Save" if survey else "Create survey" }}</button>
       <a class="btn btn-secondary" href="{{ url_for('surveys.dashboard') }}">Cancel</a>

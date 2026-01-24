@@ -1,3 +1,5 @@
+from datetime import date
+
 from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from sqlalchemy import select
@@ -37,6 +39,27 @@ def validate_survey_form(title: str, thank_you: str = "") -> dict[str, str]:
     if len(thank_you) > THANK_YOU_MAX:
         errors["thank_you_message"] = f"Keep the message under {THANK_YOU_MAX} characters."
     return errors
+
+
+def parse_share_settings(form) -> tuple[dict, dict[str, str]]:
+    values: dict = {"closes_on": None, "response_limit": None}
+    errors: dict[str, str] = {}
+    raw_date = form.get("closes_on", "").strip()
+    if raw_date:
+        try:
+            values["closes_on"] = date.fromisoformat(raw_date)
+        except ValueError:
+            errors["closes_on"] = "Enter a date as YYYY-MM-DD."
+    raw_limit = form.get("response_limit", "").strip()
+    if raw_limit:
+        try:
+            values["response_limit"] = int(raw_limit)
+        except ValueError:
+            errors["response_limit"] = "Enter a whole number."
+        else:
+            if values["response_limit"] < 1:
+                errors["response_limit"] = "The limit must be at least 1."
+    return values, errors
 
 
 @bp.get("/")
@@ -83,6 +106,8 @@ def edit(survey_id: int):
         "title": survey.title,
         "description": survey.description,
         "thank_you_message": survey.thank_you_message,
+        "closes_on": survey.closes_on.isoformat() if survey.closes_on else "",
+        "response_limit": survey.response_limit or "",
     }
     errors: dict[str, str] = {}
     if request.method == "POST":
@@ -90,9 +115,15 @@ def edit(survey_id: int):
             "title": request.form.get("title", "").strip(),
             "description": request.form.get("description", "").strip(),
             "thank_you_message": request.form.get("thank_you_message", "").strip(),
+            "closes_on": request.form.get("closes_on", "").strip(),
+            "response_limit": request.form.get("response_limit", "").strip(),
         }
         errors = validate_survey_form(form["title"], form["thank_you_message"])
+        share, share_errors = parse_share_settings(request.form)
+        errors.update(share_errors)
         if not errors:
+            survey.closes_on = share["closes_on"]
+            survey.response_limit = share["response_limit"]
             survey.title = form["title"]
             survey.description = form["description"]
             survey.thank_you_message = form["thank_you_message"]

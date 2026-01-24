@@ -107,3 +107,31 @@ def test_dashboard_shows_completed_response_counts(auth_client, owner):
     html = auth_client.get("/surveys/").get_data(as_text=True)
     assert "2 responses" in html
     assert "0 responses" in html
+
+
+def test_save_close_date_and_limit(auth_client, owner, db):
+    from datetime import date
+
+    survey = make_survey(owner)
+    resp = auth_client.post(
+        f"/surveys/{survey.id}/settings",
+        data={"title": "T", "closes_on": "2026-03-01", "response_limit": "50"},
+    )
+    assert resp.status_code == 302
+    db.session.refresh(survey)
+    assert survey.closes_on == date(2026, 3, 1)
+    assert survey.response_limit == 50
+
+    auth_client.post(f"/surveys/{survey.id}/settings", data={"title": "T"})
+    db.session.refresh(survey)
+    assert survey.closes_on is None and survey.response_limit is None
+
+
+def test_invalid_share_settings(auth_client, owner):
+    survey = make_survey(owner)
+    url = f"/surveys/{survey.id}/settings"
+    resp = auth_client.post(url, data={"title": "T", "closes_on": "next week"})
+    assert resp.status_code == 422
+    resp = auth_client.post(url, data={"title": "T", "response_limit": "0"})
+    assert resp.status_code == 422
+    assert b"at least 1" in resp.data

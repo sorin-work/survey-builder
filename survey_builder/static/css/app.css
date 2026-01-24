@@ -606,3 +606,20 @@ select.move-page {
   padding: 0.2rem 0.4rem;
   font-size: 0.85rem;
 }
+
+.share-settings {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem 0;
+  margin: 0 0 1rem;
+}
+
+.share-settings legend {
+  font-weight: 600;
+  padding: 0 0.25rem;
+}
+
+.small {
+  font-size: 0.85rem;
+  margin: 0.25rem 0 0;
+}
