@@ -115,8 +115,9 @@ def render_page(
 @bp.get("/<token>")
 def show(token: str):
     survey = get_survey_by_token(token)
-    if not sharing.is_accepting_responses(survey):
-        return render_template("public/closed.html", survey=survey), 410
+    reason = sharing.closed_reason(survey)
+    if reason:
+        return render_template("public/closed.html", survey=survey, reason=reason), 410
     state = load_state(survey)
     if state.get("done"):
         return redirect(url_for("public.thanks", token=token))
@@ -128,8 +129,9 @@ def show(token: str):
 @bp.post("/<token>")
 def submit(token: str):
     survey = get_survey_by_token(token)
-    if not sharing.is_accepting_responses(survey):
-        return render_template("public/closed.html", survey=survey), 410
+    reason = sharing.closed_reason(survey)
+    if reason:
+        return render_template("public/closed.html", survey=survey, reason=reason), 410
     state = load_state(survey)
     if state.get("done"):
         return redirect(url_for("public.thanks", token=token))

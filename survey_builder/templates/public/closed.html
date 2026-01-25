@@ -2,6 +2,11 @@
 {% block content %}
   <section class="card">
     <h1>{{ survey.title }}</h1>
+    {% if reason == "date" %}
+      <p>This survey closed on {{ survey.closes_on.strftime("%B %-d, %Y") }}.</p>
+    {% elif reason == "limit" %}
+      <p>This survey has received all the responses it needed.</p>
+    {% endif %}
     <p>This survey is no longer accepting responses. Thank you for your interest.</p>
   </section>
 {% endblock %}

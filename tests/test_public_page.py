@@ -53,3 +53,26 @@ def test_multi_page_survey_shows_progress(client, owner):
     html = client.get(f"/s/{survey.share_token}").get_data(as_text=True)
     assert "Page 1 of 2" in html
     assert "Next" in html
+
+
+def test_closed_page_explains_close_date(client, owner, db):
+    from datetime import date
+
+    survey = make_published_survey(owner)
+    survey.closes_on = date(2025, 12, 31)
+    db.session.commit()
+    resp = client.get(f"/s/{survey.share_token}")
+    assert resp.status_code == 410
+    assert b"closed on December 31, 2025" in resp.data
+
+
+def test_closed_page_explains_limit(client, owner, db):
+    from factories import add_response
+
+    survey = make_published_survey(owner)
+    survey.response_limit = 1
+    for value in ("a", "b"):
+        add_response(survey, {survey.questions[0]: value})
+    resp = client.get(f"/s/{survey.share_token}")
+    assert resp.status_code == 410
+    assert b"all the responses it needed" in resp.data
