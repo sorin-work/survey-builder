@@ -36,6 +36,13 @@
         <button class="btn btn-secondary" type="button" data-copy="#share-url">Copy</button>
         <a class="btn btn-secondary" href="{{ share_url }}" target="_blank" rel="noopener">Open</a>
       </div>
+      <p class="muted small share-status">
+        {{ completed }} completed response{{ "" if completed == 1 else "s" }}
+        {%- if survey.response_limit %} of {{ survey.response_limit }}{% endif %}.
+        {% if survey.closes_on %}Open until the end of {{ survey.closes_on.strftime("%B %-d, %Y") }}.{% endif %}
+        {% if closed_reason == "date" %}<strong>The close date has passed.</strong>{% endif %}
+        {% if closed_reason == "limit" %}<strong>The response limit has been reached.</strong>{% endif %}
+      </p>
     </section>
   {% endif %}
 

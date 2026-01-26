@@ -59,3 +59,19 @@ def test_editor_shows_share_link_once_published(auth_client, owner, db):
     db.session.refresh(survey)
     html = auth_client.get(f"/surveys/{survey.id}/edit").get_data(as_text=True)
     assert f"http://localhost/s/{survey.share_token}" in html
+
+
+def test_share_panel_shows_limit_and_close_date(auth_client, owner, db):
+    from datetime import date
+
+    from factories import add_response
+
+    survey = with_question(db, make_survey(owner))
+    auth_client.post(f"/surveys/{survey.id}/publish")
+    survey.response_limit = 10
+    survey.closes_on = date(2099, 6, 30)
+    db.session.commit()
+    add_response(survey, {survey.questions[0]: "hi"})
+    html = auth_client.get(f"/surveys/{survey.id}/edit").get_data(as_text=True)
+    assert "1 completed response of 10." in html
+    assert "Open until the end of June 30, 2099." in html

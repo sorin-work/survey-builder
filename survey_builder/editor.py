@@ -8,8 +8,10 @@ working without JavaScript.
 from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
 from flask_login import login_required
 
+from .domain import sharing
 from .domain.answers import parse_page
 from .domain.question_types import default_settings, get_type
+from .domain.results import completed_response_count
 from .domain.settings import parse_settings
 from .extensions import db
 from .models import Choice, Page, Question, Survey
@@ -54,7 +56,12 @@ def renumber(items) -> None:
 @bp.get("/edit")
 def edit(survey_id: int):
     survey = get_owned_survey(survey_id)
-    return render_template("editor/edit.html", survey=survey)
+    return render_template(
+        "editor/edit.html",
+        survey=survey,
+        closed_reason=sharing.closed_reason(survey),
+        completed=completed_response_count(survey),
+    )
 
 
 @bp.post("/pages")
