@@ -98,6 +98,12 @@ class Question(db.Model):
     choices: Mapped[list["Choice"]] = relationship(
         back_populates="question", order_by="Choice.position", cascade="all, delete-orphan"
     )
+    branch_rules: Mapped[list["BranchRule"]] = relationship(
+        back_populates="question",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        order_by="BranchRule.id",
+    )
 
 
 class Choice(db.Model):
@@ -111,6 +117,28 @@ class Choice(db.Model):
     position: Mapped[int] = mapped_column(Integer, default=0)
 
     question: Mapped[Question] = relationship(back_populates="choices")
+
+
+class BranchRule(db.Model):
+    """Skip logic: if ``question`` is answered with ``choice``, continue at
+    ``target_page`` instead of the next page. No target page means "end the survey"."""
+
+    __tablename__ = "branch_rules"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    question_id: Mapped[int] = mapped_column(
+        ForeignKey("questions.id", ondelete="CASCADE"), index=True
+    )
+    choice_id: Mapped[int] = mapped_column(ForeignKey("choices.id", ondelete="CASCADE"))
+    target_page_id: Mapped[int | None] = mapped_column(ForeignKey("pages.id", ondelete="CASCADE"))
+
+    question: Mapped[Question] = relationship(back_populates="branch_rules")
+    choice: Mapped[Choice] = relationship()
+    target_page: Mapped[Page | None] = relationship()
+
+    @property
+    def ends_survey(self) -> bool:
+        return self.target_page_id is None
 
 
 class Response(db.Model):
