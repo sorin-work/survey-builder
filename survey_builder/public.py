@@ -13,6 +13,7 @@ from sqlalchemy import select
 
 from .domain import sharing
 from .domain.answers import parse_page
+from .domain.branching import next_page
 from .extensions import db
 from .models import Answer, Page, Response, Survey, utcnow
 
@@ -51,11 +52,6 @@ def current_page(survey: Survey, state: dict) -> Page:
         if page.id == page_id:
             return page
     return survey.pages[0]
-
-
-def next_page(survey: Survey, page: Page) -> Page | None:
-    index = survey.pages.index(page)
-    return survey.pages[index + 1] if index + 1 < len(survey.pages) else None
 
 
 def store_answers(response: Response, parsed) -> None:
@@ -155,7 +151,7 @@ def submit(token: str):
         state["key"] = response.key
     store_answers(response, parsed)
 
-    following = next_page(survey, page)
+    following = next_page(survey, page, parsed)
     if following is None:
         response.completed_at = utcnow()
         state["done"] = True

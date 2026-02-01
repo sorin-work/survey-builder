@@ -114,3 +114,41 @@ def test_back_on_first_page_does_nothing(client, owner):
     url = f"/s/{survey.share_token}"
     client.post(f"{url}/back")
     assert "Page 1 of 2" in client.get(url).get_data(as_text=True)
+
+
+def test_branch_rule_skips_a_page(client, owner, db):
+    from survey_builder.models import BranchRule
+
+    survey = make_published_survey(
+        owner,
+        [
+            [("single_choice", "Own a pet?", {"choices": ["Yes", "No"]})],
+            [("short_text", "Pet name", {})],
+            [("long_text", "Comments", {})],
+        ],
+    )
+    first, second, third = survey.pages
+    own = first.questions[0]
+    own.branch_rules = [BranchRule(choice=own.choices[1], target_page=third)]
+    db.session.commit()
+    url = f"/s/{survey.share_token}"
+
+    client.post(url, data={"page_id": first.id, f"q{own.id}": own.choices[1].id})
+    assert "Page 3 of 3" in client.get(url).get_data(as_text=True)
+    resp = client.post(url, data={"page_id": third.id})
+    assert resp.headers["Location"].endswith("/thanks")
+
+
+def test_branch_rule_can_end_the_survey_early(client, owner, db):
+    from survey_builder.models import BranchRule
+
+    survey = two_page_survey(owner)
+    page1, _, name, pets, *_ = ids(survey)
+    pets.branch_rules = [BranchRule(choice=pets.choices[2])]
+    db.session.commit()
+    resp = client.post(
+        f"/s/{survey.share_token}",
+        data={"page_id": page1.id, f"q{name.id}": "Ana", f"q{pets.id}": pets.choices[2].id},
+    )
+    assert resp.headers["Location"].endswith("/thanks")
+    assert db.session.query(Response).one().is_complete
