@@ -10,11 +10,12 @@ from flask_login import login_required
 
 from .domain import sharing
 from .domain.answers import parse_page
+from .domain.branching import valid_targets
 from .domain.question_types import default_settings, get_type
 from .domain.results import completed_response_count
 from .domain.settings import parse_settings
 from .extensions import db
-from .models import Choice, Page, Question, Survey
+from .models import BranchRule, Choice, Page, Question, Survey
 from .surveys import get_owned_survey
 
 bp = Blueprint("editor", __name__, url_prefix="/surveys/<int:survey_id>")
@@ -318,3 +319,45 @@ def preview(survey_id: int):
         errors=errors,
         preview=True,
     ), (422 if errors else 200)
+
+
+@bp.post("/questions/<int:question_id>/rules")
+def add_rule(survey_id: int, question_id: int):
+    survey = get_owned_survey(survey_id)
+    question = get_question(survey, question_id)
+    if not get_type(question.type).has_choices:
+        abort(400)
+    choice = next(
+        (c for c in question.choices if c.id == request.form.get("choice_id", type=int)), None
+    )
+    raw_target = request.form.get("target", "")
+    target = None
+    if raw_target != "end":
+        targets = {p.id: p for p in valid_targets(survey, question.page)}
+        target = targets.get(int(raw_target)) if raw_target.isdigit() else None
+    if choice is None or (raw_target != "end" and target is None):
+        return render_question(survey, question, {"rules": "Pick an option and a later page."}, 422)
+
+    existing = next((r for r in question.branch_rules if r.choice_id == choice.id), None)
+    if existing:
+        existing.target_page = target
+    else:
+        question.branch_rules.append(BranchRule(choice=choice, target_page=target))
+    db.session.commit()
+    if is_htmx():
+        return render_question(survey, question)
+    return back_to_editor(survey, f"question-{question.id}")
+
+
+@bp.post("/rules/<int:rule_id>/delete")
+def delete_rule(survey_id: int, rule_id: int):
+    survey = get_owned_survey(survey_id)
+    rule = db.session.get(BranchRule, rule_id)
+    if rule is None or rule.question.page.survey_id != survey.id:
+        abort(404)
+    question = rule.question
+    question.branch_rules.remove(rule)
+    db.session.commit()
+    if is_htmx():
+        return render_question(survey, question)
+    return back_to_editor(survey, f"question-{question.id}")

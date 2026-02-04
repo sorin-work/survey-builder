@@ -623,3 +623,20 @@ select.move-page {
   font-size: 0.85rem;
   margin: 0.25rem 0 0;
 }
+
+.rule-list {
+  margin: 0.5rem 0;
+  padding-left: 1.25rem;
+}
+
+.rule-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.rule-form select {
+  width: auto;
+}
