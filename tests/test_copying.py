@@ -45,3 +45,21 @@ def test_duplicate_settings_are_independent(auth_client, owner, db):
 def test_cannot_duplicate_foreign_survey(auth_client, db):
     survey = build(make_user("other@example.com"))
     assert auth_client.post(f"/surveys/{survey.id}/duplicate").status_code == 404
+
+
+def test_duplicate_keeps_skip_rules(auth_client, owner, db):
+    from survey_builder.models import BranchRule
+
+    survey = build(owner)
+    plan = survey.questions[0]
+    plan.branch_rules = [
+        BranchRule(choice=plan.choices[0], target_page=survey.pages[1]),
+        BranchRule(choice=plan.choices[1]),
+    ]
+    db.session.commit()
+    auth_client.post(f"/surveys/{survey.id}/duplicate")
+    clone = db.session.query(Survey).filter(Survey.id != survey.id).one()
+    to_page, to_end = clone.questions[0].branch_rules
+    assert to_page.choice.label == "Free"
+    assert to_page.target_page_id == clone.pages[1].id
+    assert to_end.choice.label == "Pro" and to_end.ends_survey

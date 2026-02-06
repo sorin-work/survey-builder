@@ -2,7 +2,7 @@
 
 import copy
 
-from ..models import Choice, Page, Question, Survey
+from ..models import BranchRule, Choice, Page, Question, Survey
 
 
 def copy_survey(survey: Survey, title: str | None = None) -> Survey:
@@ -12,8 +12,12 @@ def copy_survey(survey: Survey, title: str | None = None) -> Survey:
         description=survey.description,
         thank_you_message=survey.thank_you_message,
     )
+    pages: dict[int, Page] = {}
+    choices: dict[int, Choice] = {}
+    questions: list[tuple[Question, Question]] = []
     for page in survey.pages:
         new_page = Page(title=page.title, position=page.position)
+        pages[page.id] = new_page
         for question in page.questions:
             new_question = Question(
                 type=question.type,
@@ -23,9 +27,19 @@ def copy_survey(survey: Survey, title: str | None = None) -> Survey:
                 position=question.position,
                 settings=copy.deepcopy(question.settings or {}),
             )
-            new_question.choices = [
-                Choice(label=c.label, position=c.position) for c in question.choices
-            ]
+            for choice in question.choices:
+                choices[choice.id] = Choice(label=choice.label, position=choice.position)
+                new_question.choices.append(choices[choice.id])
             new_page.questions.append(new_question)
+            questions.append((question, new_question))
         clone.pages.append(new_page)
+
+    for question, new_question in questions:
+        for rule in question.branch_rules:
+            new_question.branch_rules.append(
+                BranchRule(
+                    choice=choices[rule.choice_id],
+                    target_page=pages[rule.target_page_id] if rule.target_page_id else None,
+                )
+            )
     return clone
