@@ -24,3 +24,17 @@ def valid_targets(survey, page):
     """Pages a rule on ``page`` may jump to: only later pages, so there are no loops."""
     index = survey.pages.index(page)
     return survey.pages[index + 1 :]
+
+
+def prune_invalid_rules(survey) -> int:
+    """Remove rules that no longer point forward (after pages or questions moved).
+    Returns how many were removed."""
+    removed = 0
+    for page in survey.pages:
+        allowed = {p.id for p in valid_targets(survey, page)}
+        for question in page.questions:
+            for rule in list(question.branch_rules):
+                if rule.target_page_id is not None and rule.target_page_id not in allowed:
+                    question.branch_rules.remove(rule)
+                    removed += 1
+    return removed

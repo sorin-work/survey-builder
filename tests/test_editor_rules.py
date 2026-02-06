@@ -86,3 +86,28 @@ def test_delete_rule(auth_client, owner, db):
     resp = auth_client.post(f"/surveys/{survey.id}/rules/{rule.id}/delete", headers=HX)
     assert resp.status_code == 200
     assert db.session.query(BranchRule).count() == 0
+
+
+def test_moving_pages_drops_rules_that_now_point_backwards(auth_client, owner, db):
+    survey = build(owner)
+    question = survey.questions[0]
+    first, second, third = survey.pages
+    add_rule(auth_client, survey, question, question.choices[0], second.id)
+    add_rule(auth_client, survey, question, question.choices[1], third.id)
+
+    # Move page 2 above page 1: the rule to it would now jump backwards.
+    auth_client.post(f"/surveys/{survey.id}/pages/{second.id}/move", data={"direction": "up"})
+    db.session.expire_all()
+    rules = db.session.query(BranchRule).all()
+    assert [r.target_page_id for r in rules] == [third.id]
+
+
+def test_moving_a_question_to_a_later_page_drops_its_broken_rules(auth_client, owner, db):
+    survey = build(owner)
+    question = survey.questions[0]
+    second, third = survey.pages[1], survey.pages[2]
+    add_rule(auth_client, survey, question, question.choices[0], second.id)
+    auth_client.post(
+        f"/surveys/{survey.id}/questions/{question.id}/page", data={"page_id": third.id}
+    )
+    assert db.session.query(BranchRule).count() == 0

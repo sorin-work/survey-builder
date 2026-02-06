@@ -10,7 +10,7 @@ from flask_login import login_required
 
 from .domain import sharing
 from .domain.answers import parse_page
-from .domain.branching import valid_targets
+from .domain.branching import prune_invalid_rules, valid_targets
 from .domain.question_types import default_settings, get_type
 from .domain.results import completed_response_count
 from .domain.settings import parse_settings
@@ -47,6 +47,18 @@ def get_question(survey: Survey, question_id: int) -> Question:
     if question is None or question.page.survey_id != survey.id:
         abort(404)
     return question
+
+
+def drop_broken_rules(survey: Survey) -> None:
+    db.session.flush()
+    db.session.expire(survey, ["pages"])
+    removed = prune_invalid_rules(survey)
+    if removed:
+        flash(
+            f"Removed {removed} skip rule{'s' if removed > 1 else ''} that pointed to an "
+            "earlier page.",
+            "error",
+        )
 
 
 def renumber(items) -> None:
@@ -115,6 +127,7 @@ def move_page(survey_id: int, page_id: int):
     if 0 <= target < len(pages):
         pages[index], pages[target] = pages[target], pages[index]
         renumber(pages)
+        drop_broken_rules(survey)
         db.session.commit()
     if is_htmx():
         return "", 204, {"HX-Refresh": "true"}
@@ -287,6 +300,7 @@ def move_question_to_page(survey_id: int, question_id: int):
         question.position = len(target.questions)
         question.page = target  # moves it between the two collections
         renumber(source.questions)
+        drop_broken_rules(survey)
         db.session.commit()
     if is_htmx():
         # Two pages changed; simplest is to let htmx reload the editor.
