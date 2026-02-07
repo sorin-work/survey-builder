@@ -7,7 +7,7 @@ from datetime import date, timedelta
 from sqlalchemy import select
 
 from .extensions import db
-from .models import Answer, Choice, Page, Question, Response, Survey, User, utcnow
+from .models import Answer, BranchRule, Choice, Page, Question, Response, Survey, User, utcnow
 
 DEMO_EMAIL = "demo@example.com"
 DEMO_PASSWORD = "demo-password"
@@ -91,25 +91,31 @@ def _offsite_survey(owner: User) -> Survey:
         status="published",
         share_token=secrets.token_urlsafe(12),
     )
-    page = Page(position=0)
+    attend = Page(title="Attendance", position=0)
+    joining = _question(
+        "single_choice", "Will you join the offsite?", 1, ["Yes", "No"], required=True
+    )
+    attend.questions = [_question("short_text", "Your name", 0, required=True), joining]
+    page = Page(title="Plans", position=1)
     page.questions = [
-        _question("short_text", "Your name", 0, required=True),
         _question(
             "single_choice",
             "Which week works best?",
-            1,
+            0,
             ["First week of June", "Second week of June", "Last week of June"],
             required=True,
         ),
         _question(
             "multiple_choice",
             "Activities you would enjoy",
-            2,
+            1,
             ["Hiking", "Cooking class", "Escape room", "Board games", "Kayaking"],
         ),
-        _question("long_text", "Dietary requirements", 3),
+        _question("long_text", "Dietary requirements", 2),
     ]
-    survey.pages = [page]
+    survey.pages = [attend, page]
+    # People who cannot come skip the planning questions.
+    joining.branch_rules = [BranchRule(choice=joining.choices[1])]
     return survey
 
 
@@ -152,15 +158,24 @@ def _fake_customer_responses(survey: Survey, count: int, rng: random.Random) -> 
 
 
 def _fake_offsite_responses(survey: Survey, rng: random.Random) -> None:
-    name, week, activities, diet = survey.pages[0].questions
+    name, joining = survey.pages[0].questions
+    week, activities, diet = survey.pages[1].questions
     names = ["Ana", "Bogdan", "Carla", "Dan", "Elena", "Filip", "Gabi", "Horia", "Ioana"]
     for person in names:
         completed = utcnow() - timedelta(days=rng.randint(0, 10), hours=rng.randint(0, 23))
         response = Response(
             survey=survey, key=secrets.token_hex(16), started_at=completed, completed_at=completed
         )
+        db.session.add(response)
+        if rng.random() < 0.2:
+            response.answers = [
+                Answer(question=name, text_value=person),
+                Answer(question=joining, choice=joining.choices[1]),
+            ]
+            continue
         response.answers = [
             Answer(question=name, text_value=person),
+            Answer(question=joining, choice=joining.choices[0]),
             Answer(question=week, choice=rng.choice(week.choices)),
             *(
                 Answer(question=activities, choice=c)
@@ -169,7 +184,6 @@ def _fake_offsite_responses(survey: Survey, rng: random.Random) -> None:
         ]
         if rng.random() < 0.3:
             response.answers.append(Answer(question=diet, text_value="Vegetarian, please."))
-        db.session.add(response)
 
 
 def seed_demo(responses: int = 140) -> bool:

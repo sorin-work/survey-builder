@@ -25,3 +25,12 @@ def test_seed_cli_command(app, db):
     assert "Demo data created" in result.output
     result = app.test_cli_runner().invoke(args=["seed-demo"])
     assert "already exists" in result.output
+
+
+def test_offsite_survey_has_a_skip_rule(db):
+    seed_demo(responses=1)
+    offsite = db.session.query(Survey).filter_by(title="Team offsite planning").one()
+    joining = offsite.pages[0].questions[1]
+    (rule,) = joining.branch_rules
+    assert rule.choice.label == "No" and rule.ends_survey
+    assert completed_response_count(offsite) == 9
