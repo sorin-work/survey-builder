@@ -85,3 +85,30 @@ def test_empty_survey_summary(owner, db):
     assert all(s.answered == 0 for s in summaries)
     assert summaries[2].average is None
     assert summaries[0].percentages == [0.0, 0.0, 0.0]
+
+
+def test_period_filter_is_inclusive_of_both_days(owner, db):
+    from datetime import datetime
+
+    from survey_builder.domain.results import Period
+
+    survey = build(owner)
+    plan = survey.questions[0]
+    add_response(survey, {plan: "Free"}, when=datetime(2026, 1, 31, 23, 59))
+    add_response(survey, {plan: "Pro"}, when=datetime(2026, 2, 1, 0, 0))
+    add_response(survey, {plan: "Team"}, when=datetime(2026, 2, 28, 23, 59))
+    add_response(survey, {plan: "Team"}, when=datetime(2026, 3, 1, 0, 1))
+
+    february = Period(date(2026, 2, 1), date(2026, 2, 28))
+    assert completed_response_count(survey, february) == 2
+    assert summarize(survey, february)[0].counts == [0, 1, 1]
+    assert completed_response_count(survey, Period(end=date(2026, 1, 31))) == 1
+
+
+def test_period_from_query_args_ignores_garbage():
+    from survey_builder.domain.results import Period
+
+    period = Period.from_args({"from": "2026-02-01", "to": "soon"})
+    assert period == Period(date(2026, 2, 1), None)
+    assert period.as_args() == {"from": "2026-02-01"}
+    assert Period.from_args({}).is_open

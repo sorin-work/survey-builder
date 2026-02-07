@@ -50,3 +50,17 @@ def test_charts_carry_their_data(auth_client, owner):
     specs = [json.loads(m) for m in re.findall(r"data-chart='([^']+)'", html)]
     assert {"kind": "pie", "labels": ["Free", "Pro"], "counts": [1, 0]} in specs
     assert "chart.umd.min.js" in html
+
+
+def test_results_page_filters_by_period(auth_client, owner):
+    from datetime import datetime
+
+    survey = build(owner)
+    plan = survey.questions[0]
+    add_response(survey, {plan: "Free"}, when=datetime(2026, 1, 10, 12))
+    add_response(survey, {plan: "Pro"}, when=datetime(2026, 2, 10, 12))
+    html = auth_client.get(f"/surveys/{survey.id}/results/?from=2026-02-01&to=2026-02-28").get_data(
+        as_text=True
+    )
+    assert "completed responses in this period" in html
+    assert '"counts": [0, 1]' in html

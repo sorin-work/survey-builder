@@ -17,7 +17,7 @@ from sqlalchemy import select
 
 from .domain.export import to_csv
 from .domain.pagination import Pagination
-from .domain.results import completed_response_count, summarize
+from .domain.results import Period, completed_response_count, summarize
 from .extensions import db
 from .models import Response
 from .surveys import get_owned_survey
@@ -34,11 +34,13 @@ def _require_login():
 @bp.get("/")
 def summary(survey_id: int):
     survey = get_owned_survey(survey_id)
+    period = Period.from_args(request.args)
     return render_template(
         "results/summary.html",
         survey=survey,
-        total=completed_response_count(survey),
-        summaries=summarize(survey),
+        period=period,
+        total=completed_response_count(survey, period),
+        summaries=summarize(survey, period),
     )
 
 

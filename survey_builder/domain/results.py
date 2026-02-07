@@ -2,6 +2,7 @@
 
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
+from datetime import date, datetime, time, timedelta
 
 from sqlalchemy import select
 
@@ -59,19 +60,67 @@ def nps_score(values) -> NpsScore:
     )
 
 
-def completed_response_count(survey) -> int:
+@dataclass(frozen=True)
+class Period:
+    """An inclusive range of submission dates (UTC). Either end may be open."""
+
+    start: date | None = None
+    end: date | None = None
+
+    @classmethod
+    def from_args(cls, args) -> "Period":
+        def parse(raw):
+            try:
+                return date.fromisoformat(raw) if raw else None
+            except ValueError:
+                return None
+
+        return cls(parse(args.get("from")), parse(args.get("to")))
+
+    @property
+    def is_open(self) -> bool:
+        return self.start is None and self.end is None
+
+    def conditions(self) -> list:
+        conditions = []
+        if self.start:
+            conditions.append(Response.completed_at >= datetime.combine(self.start, time.min))
+        if self.end:
+            next_day = datetime.combine(self.end + timedelta(days=1), time.min)
+            conditions.append(Response.completed_at < next_day)
+        return conditions
+
+    def as_args(self) -> dict[str, str]:
+        args = {}
+        if self.start:
+            args["from"] = self.start.isoformat()
+        if self.end:
+            args["to"] = self.end.isoformat()
+        return args
+
+
+ALL_TIME = Period()
+
+
+def completed_filter(survey, period: Period = ALL_TIME) -> list:
+    return [
+        Response.survey_id == survey.id,
+        Response.completed_at.is_not(None),
+        *period.conditions(),
+    ]
+
+
+def completed_response_count(survey, period: Period = ALL_TIME) -> int:
     return db.session.scalar(
-        select(db.func.count(Response.id)).where(
-            Response.survey_id == survey.id, Response.completed_at.is_not(None)
-        )
+        select(db.func.count(Response.id)).where(*completed_filter(survey, period))
     )
 
 
-def _answers_by_question(survey) -> dict[int, list[Answer]]:
+def _answers_by_question(survey, period: Period) -> dict[int, list[Answer]]:
     rows = db.session.scalars(
         select(Answer)
         .join(Response)
-        .where(Response.survey_id == survey.id, Response.completed_at.is_not(None))
+        .where(*completed_filter(survey, period))
         .order_by(Response.completed_at.desc(), Answer.id)
     )
     grouped: dict[int, list[Answer]] = defaultdict(list)
@@ -115,8 +164,8 @@ def _summarize_dates(summary: QuestionSummary, answers: list[Answer]) -> None:
     summary.counts = [months[m] for m in summary.labels]
 
 
-def summarize(survey) -> list[QuestionSummary]:
-    grouped = _answers_by_question(survey)
+def summarize(survey, period: Period = ALL_TIME) -> list[QuestionSummary]:
+    grouped = _answers_by_question(survey, period)
     summaries = []
     for question in survey.questions:
         summary = QuestionSummary(question=question)

@@ -10,8 +10,17 @@
 
   {% with active = "summary" %}{% include "results/_tabs.html" %}{% endwith %}
 
+  <form class="period-filter" method="get">
+    <label for="from">From</label>
+    <input type="date" id="from" name="from" value="{{ period.start.isoformat() if period.start else '' }}">
+    <label for="to">to</label>
+    <input type="date" id="to" name="to" value="{{ period.end.isoformat() if period.end else '' }}">
+    <button class="btn btn-secondary btn-small" type="submit">Apply</button>
+    {% if not period.is_open %}<a href="{{ url_for('results.summary', survey_id=survey.id) }}">All time</a>{% endif %}
+  </form>
+
   <section class="card stats">
-    <div class="stat"><span class="stat-value">{{ total }}</span><span class="muted">completed responses</span></div>
+    <div class="stat"><span class="stat-value">{{ total }}</span><span class="muted">completed responses{% if not period.is_open %} in this period{% endif %}</span></div>
   </section>
 
   {% if not total %}
