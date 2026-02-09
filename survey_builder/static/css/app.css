@@ -656,3 +656,8 @@ select.move-page {
 .period-filter input {
   width: auto;
 }
+
+.card-title {
+  font-size: 1.1rem;
+  margin: 0 0 0.5rem;
+}

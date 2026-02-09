@@ -6,8 +6,9 @@
   function render(canvas) {
     const spec = JSON.parse(canvas.dataset.chart);
     const isPie = spec.kind === "pie";
+    const isLine = spec.kind === "line";
     new Chart(canvas, {
-      type: isPie ? "doughnut" : "bar",
+      type: isPie ? "doughnut" : isLine ? "line" : "bar",
       data: {
         labels: spec.labels,
         datasets: [
@@ -15,6 +16,9 @@
             data: spec.counts,
             backgroundColor: isPie ? spec.labels.map((_, i) => palette[i % palette.length]) : palette[0],
             borderRadius: isPie ? 0 : 4,
+            borderColor: palette[0],
+            tension: 0.25,
+            fill: false,
           },
         ],
       },

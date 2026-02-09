@@ -23,6 +23,18 @@
     <div class="stat"><span class="stat-value">{{ total }}</span><span class="muted">completed responses{% if not period.is_open %} in this period{% endif %}</span></div>
   </section>
 
+  {% if timeline|length > 1 %}
+    <section class="card">
+      <h2 class="card-title">Responses per day</h2>
+      <div class="chart-wrap">
+        <canvas data-chart='{{ {"kind": "line",
+                                "labels": timeline|map("first")|map("string")|list,
+                                "counts": timeline|map("last")|list}|tojson }}'
+                aria-label="Responses per day" role="img"></canvas>
+      </div>
+    </section>
+  {% endif %}
+
   {% if not total %}
     <div class="card empty">
       <p>No responses yet.</p>

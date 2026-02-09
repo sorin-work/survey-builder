@@ -116,6 +116,24 @@ def completed_response_count(survey, period: Period = ALL_TIME) -> int:
     )
 
 
+def daily_counts(survey, period: Period = ALL_TIME) -> list[tuple[date, int]]:
+    """Completed responses per day, including days without any, oldest first."""
+    stamps = db.session.scalars(
+        select(Response.completed_at).where(*completed_filter(survey, period))
+    ).all()
+    if not stamps:
+        return []
+    per_day = Counter(stamp.date() for stamp in stamps)
+    first = period.start or min(per_day)
+    last = period.end or max(per_day)
+    days = []
+    day = first
+    while day <= last:
+        days.append((day, per_day.get(day, 0)))
+        day += timedelta(days=1)
+    return days
+
+
 def _answers_by_question(survey, period: Period) -> dict[int, list[Answer]]:
     rows = db.session.scalars(
         select(Answer)

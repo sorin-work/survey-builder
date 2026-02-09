@@ -112,3 +112,27 @@ def test_period_from_query_args_ignores_garbage():
     assert period == Period(date(2026, 2, 1), None)
     assert period.as_args() == {"from": "2026-02-01"}
     assert Period.from_args({}).is_open
+
+
+def test_daily_counts_fill_gaps(owner, db):
+    from datetime import datetime
+
+    from survey_builder.domain.results import daily_counts
+
+    survey = build(owner)
+    plan = survey.questions[0]
+    add_response(survey, {plan: "Free"}, when=datetime(2026, 2, 1, 9))
+    add_response(survey, {plan: "Free"}, when=datetime(2026, 2, 1, 18))
+    add_response(survey, {plan: "Pro"}, when=datetime(2026, 2, 4, 7))
+    assert daily_counts(survey) == [
+        (date(2026, 2, 1), 2),
+        (date(2026, 2, 2), 0),
+        (date(2026, 2, 3), 0),
+        (date(2026, 2, 4), 1),
+    ]
+
+
+def test_daily_counts_empty(owner, db):
+    from survey_builder.domain.results import daily_counts
+
+    assert daily_counts(build(owner)) == []
