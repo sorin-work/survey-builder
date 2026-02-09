@@ -64,3 +64,15 @@ def test_download_csv_is_owner_only(auth_client, db):
 
     survey = build(make_user("other@example.com"))
     assert auth_client.get(f"/surveys/{survey.id}/results/export.csv").status_code == 404
+
+
+def test_export_respects_the_period(auth_client, owner, db):
+    survey = build(owner)
+    name = survey.questions[0]
+    add_response(survey, {name: "January"}, when=datetime(2026, 1, 15, 8))
+    add_response(survey, {name: "February"}, when=datetime(2026, 2, 15, 8))
+    resp = auth_client.get(f"/surveys/{survey.id}/results/export.csv?from=2026-02-01")
+    body = resp.get_data(as_text=True)
+    assert "February" in body and "January" not in body
+    html = auth_client.get(f"/surveys/{survey.id}/results/?from=2026-02-01").get_data(as_text=True)
+    assert "export.csv?from=2026-02-01" in html

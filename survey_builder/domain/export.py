@@ -9,6 +9,7 @@ from sqlalchemy.orm import selectinload
 
 from ..extensions import db
 from ..models import Answer, Response
+from .results import ALL_TIME, Period, completed_filter
 
 MULTI_SEPARATOR = "; "
 
@@ -27,13 +28,13 @@ def _cell(question, answers: list[Answer]) -> str:
     return answer.text_value or ""
 
 
-def export_rows(survey):
+def export_rows(survey, period: Period = ALL_TIME):
     questions = sorted(survey.questions, key=lambda q: q.id)
     yield ["response_id", "submitted_at", *(q.prompt for q in questions)]
 
     responses = db.session.scalars(
         select(Response)
-        .where(Response.survey_id == survey.id, Response.completed_at.is_not(None))
+        .where(*completed_filter(survey, period))
         .order_by(Response.completed_at, Response.id)
         .options(selectinload(Response.answers))
     )
@@ -48,8 +49,8 @@ def export_rows(survey):
         ]
 
 
-def to_csv(survey) -> str:
+def to_csv(survey, period: Period = ALL_TIME) -> str:
     buffer = io.StringIO()
     writer = csv.writer(buffer)
-    writer.writerows(export_rows(survey))
+    writer.writerows(export_rows(survey, period))
     return buffer.getvalue()

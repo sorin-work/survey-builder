@@ -3,5 +3,5 @@
      {% if active == "summary" %}class="active"{% endif %}>Summary</a>
   <a href="{{ url_for('results.responses', survey_id=survey.id) }}"
      {% if active == "responses" %}class="active"{% endif %}>Responses</a>
-  <a class="tabs-action" href="{{ url_for('results.export_csv', survey_id=survey.id) }}">Download CSV</a>
+  <a class="tabs-action" href="{{ url_for('results.export_csv', survey_id=survey.id, **(period.as_args() if period is defined else {})) }}">Download CSV</a>
 </nav>

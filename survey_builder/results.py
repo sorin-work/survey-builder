@@ -97,7 +97,7 @@ def export_filename(survey) -> str:
 def export_csv(survey_id: int):
     survey = get_owned_survey(survey_id)
     return HttpResponse(
-        to_csv(survey),
+        to_csv(survey, Period.from_args(request.args)),
         mimetype="text/csv",
         headers={"Content-Disposition": f'attachment; filename="{export_filename(survey)}"'},
     )
