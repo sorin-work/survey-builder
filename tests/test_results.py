@@ -136,3 +136,28 @@ def test_daily_counts_empty(owner, db):
     from survey_builder.domain.results import daily_counts
 
     assert daily_counts(build(owner)) == []
+
+
+def test_funnel_completion_rate_and_median(owner, db):
+    from datetime import datetime, timedelta
+
+    from survey_builder.domain.results import funnel
+
+    survey = build(owner)
+    plan = survey.questions[0]
+    for minutes in (2, 4, 10):
+        response = add_response(survey, {plan: "Free"}, when=datetime(2026, 2, 1, 12))
+        response.started_at = response.completed_at - timedelta(minutes=minutes)
+    add_response(survey, {plan: "Pro"}, completed=False)
+    db.session.commit()
+    result = funnel(survey)
+    assert (result.started, result.completed) == (4, 3)
+    assert result.completion_rate == 75
+    assert result.median_seconds == 240
+
+
+def test_funnel_without_responses(owner, db):
+    from survey_builder.domain.results import funnel
+
+    result = funnel(build(owner))
+    assert result.completion_rate is None and result.median_seconds is None

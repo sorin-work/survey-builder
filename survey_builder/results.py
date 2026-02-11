@@ -17,7 +17,7 @@ from sqlalchemy import select
 
 from .domain.export import to_csv
 from .domain.pagination import Pagination
-from .domain.results import Period, completed_response_count, daily_counts, summarize
+from .domain.results import Period, completed_response_count, daily_counts, funnel, summarize
 from .extensions import db
 from .models import Response
 from .surveys import get_owned_survey
@@ -42,6 +42,7 @@ def summary(survey_id: int):
         total=completed_response_count(survey, period),
         summaries=summarize(survey, period),
         timeline=daily_counts(survey, period),
+        funnel=funnel(survey, period),
     )
 
 

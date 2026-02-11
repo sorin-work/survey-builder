@@ -21,6 +21,12 @@
 
   <section class="card stats">
     <div class="stat"><span class="stat-value">{{ total }}</span><span class="muted">completed responses{% if not period.is_open %} in this period{% endif %}</span></div>
+    {% if funnel.completion_rate is not none %}
+      <div class="stat"><span class="stat-value">{{ funnel.completion_rate }}%</span><span class="muted">completion rate ({{ funnel.started }} started)</span></div>
+    {% endif %}
+    {% if funnel.median_seconds is not none %}
+      <div class="stat"><span class="stat-value">{{ funnel.median_seconds|duration }}</span><span class="muted">median time to complete</span></div>
+    {% endif %}
   </section>
 
   {% if timeline|length > 1 %}

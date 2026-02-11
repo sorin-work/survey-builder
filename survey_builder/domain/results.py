@@ -116,6 +116,46 @@ def completed_response_count(survey, period: Period = ALL_TIME) -> int:
     )
 
 
+@dataclass(frozen=True)
+class Funnel:
+    started: int
+    completed: int
+    median_seconds: int | None
+
+    @property
+    def completion_rate(self) -> int | None:
+        if not self.started:
+            return None
+        return round(100 * self.completed / self.started)
+
+
+def funnel(survey, period: Period = ALL_TIME) -> Funnel:
+    """How many people started vs finished, and how long finishing took."""
+    started_conditions = [Response.survey_id == survey.id]
+    if period.start:
+        started_conditions.append(Response.started_at >= datetime.combine(period.start, time.min))
+    if period.end:
+        next_day = datetime.combine(period.end + timedelta(days=1), time.min)
+        started_conditions.append(Response.started_at < next_day)
+    started = db.session.scalar(select(db.func.count(Response.id)).where(*started_conditions))
+    rows = db.session.execute(
+        select(Response.started_at, Response.completed_at).where(*completed_filter(survey, period))
+    ).all()
+    durations = sorted((done - begun).total_seconds() for begun, done in rows)
+    median = None
+    if durations:
+        middle = len(durations) // 2
+        if len(durations) % 2:
+            median = durations[middle]
+        else:
+            median = (durations[middle - 1] + durations[middle]) / 2
+    return Funnel(
+        started=max(started, len(rows)),
+        completed=len(rows),
+        median_seconds=None if median is None else int(median),
+    )
+
+
 def daily_counts(survey, period: Period = ALL_TIME) -> list[tuple[date, int]]:
     """Completed responses per day, including days without any, oldest first."""
     stamps = db.session.scalars(

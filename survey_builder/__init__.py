@@ -30,8 +30,10 @@ def create_app(config: dict | None = None) -> Flask:
     app.register_blueprint(results_bp)
 
     from .domain.question_types import QUESTION_TYPES
+    from .formatting import duration
 
     app.jinja_env.globals["QUESTION_TYPES"] = QUESTION_TYPES
+    app.jinja_env.filters["duration"] = duration
 
     from .cli import register_cli
 
