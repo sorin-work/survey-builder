@@ -64,3 +64,11 @@ def test_results_page_filters_by_period(auth_client, owner):
     )
     assert "completed responses in this period" in html
     assert '"counts": [0, 1]' in html
+
+
+def test_long_answers_keep_line_breaks(auth_client, owner):
+    survey = build(owner)
+    comment = survey.questions[2]
+    add_response(survey, {comment: "Great tool.\nWould buy again."})
+    html = auth_client.get(f"/surveys/{survey.id}/results/").get_data(as_text=True)
+    assert "Great tool.<br>Would buy again." in html

@@ -9,3 +9,10 @@ from survey_builder.formatting import duration
 )
 def test_duration(seconds, text):
     assert duration(seconds) == text
+
+
+def test_nl2br_keeps_line_breaks():
+    from survey_builder.formatting import nl2br
+
+    assert str(nl2br("one\ntwo\r\nthree")) == "one<br>two<br>three"
+    assert str(nl2br(None)) == ""

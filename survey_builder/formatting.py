@@ -1,5 +1,7 @@
 """Small formatting helpers used as Jinja filters."""
 
+from markupsafe import Markup
+
 
 def duration(seconds: int | float | None) -> str:
     """Human friendly duration: 45s, 3m 20s, 1h 05m."""
@@ -13,3 +15,11 @@ def duration(seconds: int | float | None) -> str:
         return f"{minutes}m {seconds:02d}s"
     hours, minutes = divmod(minutes, 60)
     return f"{hours}h {minutes:02d}m"
+
+
+def nl2br(text: str | None) -> Markup:
+    """Keep the line breaks respondents typed in long answers."""
+    if not text:
+        return Markup("")
+    lines = text.replace("\r\n", "\n").split("\n")
+    return Markup("<br>".join(lines))

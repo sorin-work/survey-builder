@@ -33,7 +33,7 @@
             {% elif question.type == "date" %}
               {{ answers[0].date_value.isoformat() }}
             {% else %}
-              <span class="text-answer">{{ answers[0].text_value }}</span>
+              <span class="text-answer">{{ answers[0].text_value|nl2br }}</span>
             {% endif %}
           </dd>
         {% endfor %}

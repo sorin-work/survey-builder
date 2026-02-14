@@ -93,7 +93,7 @@
         {% elif question.type in ("short_text", "long_text") %}
           {% if summary.texts %}
             <ul class="text-answers">
-              {% for text in summary.texts %}<li>{{ text }}</li>{% endfor %}
+              {% for text in summary.texts %}<li>{{ text|nl2br }}</li>{% endfor %}
             </ul>
           {% else %}
             <p class="muted">No answers yet.</p>

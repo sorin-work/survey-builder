@@ -588,7 +588,7 @@ input.question-prompt {
 }
 
 .text-answer {
-  white-space: pre-line;
+  display: inline-block;
 }
 
 .tabs a.tabs-action {
