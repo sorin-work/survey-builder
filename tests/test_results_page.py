@@ -72,3 +72,31 @@ def test_long_answers_keep_line_breaks(auth_client, owner):
     add_response(survey, {comment: "Great tool.\nWould buy again."})
     html = auth_client.get(f"/surveys/{survey.id}/results/").get_data(as_text=True)
     assert "Great tool.<br>Would buy again." in html
+
+
+def test_all_text_answers_page(auth_client, owner):
+    survey = build(owner)
+    comment = survey.questions[2]
+    for i in range(12):
+        add_response(survey, {comment: f"comment {i}"})
+    html = auth_client.get(f"/surveys/{survey.id}/results/").get_data(as_text=True)
+    assert "See all 12 answers" in html
+    resp = auth_client.get(f"/surveys/{survey.id}/results/questions/{comment.id}")
+    assert resp.status_code == 200
+    page = resp.get_data(as_text=True)
+    assert "12 answers" in page
+    assert all(f"comment {i}" in page for i in range(12))
+
+
+def test_text_answers_page_only_for_text_questions(auth_client, owner):
+    survey = build(owner)
+    plan = survey.questions[0]
+    assert auth_client.get(f"/surveys/{survey.id}/results/questions/{plan.id}").status_code == 404
+
+
+def test_text_answers_page_is_owner_only(auth_client, owner):
+    other = build(make_user("other@example.com"))
+    comment = other.questions[2]
+    mine = make_published_survey(owner, title="Mine")
+    url = f"/surveys/{mine.id}/results/questions/{comment.id}"
+    assert auth_client.get(url).status_code == 404

@@ -95,6 +95,10 @@
             <ul class="text-answers">
               {% for text in summary.texts %}<li>{{ text|nl2br }}</li>{% endfor %}
             </ul>
+            {% if summary.answered > summary.texts|length %}
+              <a href="{{ url_for('results.text_answers', survey_id=survey.id, question_id=question.id) }}">
+                See all {{ summary.answered }} answers</a>
+            {% endif %}
           {% else %}
             <p class="muted">No answers yet.</p>
           {% endif %}

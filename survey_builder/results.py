@@ -19,7 +19,7 @@ from .domain.export import to_csv
 from .domain.pagination import Pagination
 from .domain.results import Period, completed_response_count, daily_counts, funnel, summarize
 from .extensions import db
-from .models import Response
+from .models import Answer, Question, Response
 from .surveys import get_owned_survey
 
 bp = Blueprint("results", __name__, url_prefix="/surveys/<int:survey_id>/results")
@@ -102,4 +102,37 @@ def export_csv(survey_id: int):
         to_csv(survey, Period.from_args(request.args)),
         mimetype="text/csv",
         headers={"Content-Disposition": f'attachment; filename="{export_filename(survey)}"'},
+    )
+
+
+@bp.get("/questions/<int:question_id>")
+def text_answers(survey_id: int, question_id: int):
+    survey = get_owned_survey(survey_id)
+    question = db.session.get(Question, question_id)
+    if question is None or question.page.survey_id != survey.id:
+        abort(404)
+    if question.type not in ("short_text", "long_text"):
+        abort(404)
+    base = (
+        select(Answer)
+        .join(Response)
+        .where(
+            Answer.question_id == question.id,
+            Answer.text_value.is_not(None),
+            Response.completed_at.is_not(None),
+        )
+    )
+    total = db.session.scalar(select(db.func.count()).select_from(base.subquery()))
+    pagination = Pagination.from_request(request.args.get("page"), total, per_page=50)
+    answers = db.session.scalars(
+        base.order_by(Response.completed_at.desc(), Answer.id.desc())
+        .offset(pagination.offset)
+        .limit(pagination.per_page)
+    ).all()
+    return render_template(
+        "results/text_answers.html",
+        survey=survey,
+        question=question,
+        answers=answers,
+        pagination=pagination,
     )

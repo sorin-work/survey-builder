@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}{{ question.prompt }} · {{ survey.title }}{% endblock %}
+{% block content %}
+  <div class="page-header">
+    <div>
+      <a class="muted" href="{{ url_for('results.summary', survey_id=survey.id) }}">&larr; Summary</a>
+      <h1>{{ question.prompt }}</h1>
+      <p class="muted">{{ pagination.total }} answer{{ "" if pagination.total == 1 else "s" }}</p>
+    </div>
+  </div>
+  {% if answers %}
+    <ul class="card text-answers all-answers">
+      {% for answer in answers %}
+        <li>
+          {{ answer.text_value|nl2br }}
+          <a class="muted small" href="{{ url_for('results.response_detail', survey_id=survey.id, response_id=answer.response_id) }}">#{{ answer.response_id }}</a>
+        </li>
+      {% endfor %}
+    </ul>
+    {% if pagination.pages > 1 %}
+      <nav class="pager">
+        {% if pagination.has_prev %}
+          <a href="{{ url_for('results.text_answers', survey_id=survey.id, question_id=question.id, page=pagination.page - 1) }}">&larr; Newer</a>
+        {% endif %}
+        <span class="muted">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+        {% if pagination.has_next %}
+          <a href="{{ url_for('results.text_answers', survey_id=survey.id, question_id=question.id, page=pagination.page + 1) }}">Older &rarr;</a>
+        {% endif %}
+      </nav>
+    {% endif %}
+  {% else %}
+    <div class="card empty"><p>No answers yet.</p></div>
+  {% endif %}
+{% endblock %}

@@ -661,3 +661,12 @@ select.move-page {
   font-size: 1.1rem;
   margin: 0 0 0.5rem;
 }
+
+.all-answers {
+  padding: 1rem 1rem 1rem 2.25rem;
+}
+
+.all-answers li {
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--border);
+}
