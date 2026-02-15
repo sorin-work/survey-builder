@@ -37,8 +37,10 @@ def create_app(config: dict | None = None) -> Flask:
     app.jinja_env.filters["nl2br"] = nl2br
 
     from .cli import register_cli
+    from .errors import register_error_pages
 
     register_cli(app)
+    register_error_pages(app)
 
     @app.get("/")
     def index():
