@@ -41,9 +41,9 @@ def _getlist(form, name: str) -> list[str]:
 
 def _parse_text(question, raw: str, answer: ParsedAnswer) -> str | None:
     settings = question.settings or {}
-    if not raw:
-        return REQUIRED_MESSAGE if question.required else None
     value = raw.strip()
+    if not value:
+        return REQUIRED_MESSAGE if question.required else None
     min_length = settings.get("min_length")
     max_length = settings.get("max_length")
     if min_length and len(value) < min_length:

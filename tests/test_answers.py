@@ -119,3 +119,15 @@ def test_parse_page_collects_errors_by_question():
     answers, errors = parse_page(questions, form(q2="9", q3="x"))
     assert [a.question_id for a in answers] == [2]
     assert set(errors) == {1, 3}
+
+
+@pytest.mark.parametrize("raw", ["   ", "\n\t ", " "])
+def test_whitespace_does_not_satisfy_a_required_text_question(raw):
+    _, error = parse_answer(Q(1, "long_text", required=True), form(q1=raw))
+    assert error == REQUIRED_MESSAGE
+
+
+def test_whitespace_in_optional_text_is_stored_as_no_answer():
+    answer, error = parse_answer(Q(1, "short_text"), form(q1="   "))
+    assert error is None
+    assert answer.is_empty
