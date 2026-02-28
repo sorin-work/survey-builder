@@ -4,7 +4,7 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from sqlalchemy import select
 
-from .auth import EMAIL_RE, normalize_email
+from .auth import EMAIL_RE, MIN_PASSWORD_LENGTH, normalize_email
 from .extensions import db
 from .models import User
 
@@ -44,3 +44,25 @@ def profile():
             return redirect(url_for("account.profile"))
     status = 422 if errors else 200
     return render_template("account/profile.html", form=form, errors=errors), status
+
+
+@bp.route("/password", methods=["GET", "POST"])
+def password():
+    errors: dict[str, str] = {}
+    if request.method == "POST":
+        current = request.form.get("current_password", "")
+        new = request.form.get("new_password", "")
+        confirm = request.form.get("confirm_password", "")
+        if not current_user.check_password(current):
+            errors["current_password"] = "That is not your current password."
+        if len(new) < MIN_PASSWORD_LENGTH:
+            errors["new_password"] = f"Use at least {MIN_PASSWORD_LENGTH} characters."
+        elif new != confirm:
+            errors["confirm_password"] = "The two passwords do not match."
+        if not errors:
+            current_user.set_password(new)
+            db.session.commit()
+            flash("Your password was changed.", "success")
+            return redirect(url_for("account.profile"))
+    status = 422 if errors else 200
+    return render_template("account/password.html", errors=errors), status

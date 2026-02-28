@@ -30,3 +30,31 @@ def test_invalid_profile(auth_client, db):
     resp = auth_client.post("/account/", data={"name": "", "email": "nope"})
     assert resp.status_code == 422
     assert db.session.query(User).one().name == "Owner"
+
+
+def change(client, current="s3cret-pass", new="brand-new-pass", confirm=None):
+    return client.post(
+        "/account/password",
+        data={
+            "current_password": current,
+            "new_password": new,
+            "confirm_password": new if confirm is None else confirm,
+        },
+    )
+
+
+def test_change_password(auth_client, owner, db):
+    assert change(auth_client).status_code == 302
+    db.session.refresh(owner)
+    assert owner.check_password("brand-new-pass")
+
+
+def test_change_password_checks_current_password(auth_client, owner, db):
+    resp = change(auth_client, current="wrong")
+    assert resp.status_code == 422
+    assert b"not your current password" in resp.data
+
+
+def test_change_password_rules(auth_client):
+    assert b"at least 8" in change(auth_client, new="short").data
+    assert b"do not match" in change(auth_client, confirm="something-else").data
