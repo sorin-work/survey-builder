@@ -17,6 +17,7 @@ def create_app(config: dict | None = None) -> Flask:
     login_manager.init_app(app)
     csrf.init_app(app)
 
+    from .account import bp as account_bp
     from .auth import bp as auth_bp
     from .editor import bp as editor_bp
     from .public import bp as public_bp
@@ -24,6 +25,7 @@ def create_app(config: dict | None = None) -> Flask:
     from .surveys import bp as surveys_bp
 
     app.register_blueprint(auth_bp)
+    app.register_blueprint(account_bp)
     app.register_blueprint(surveys_bp)
     app.register_blueprint(editor_bp)
     app.register_blueprint(public_bp)
