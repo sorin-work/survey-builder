@@ -1,7 +1,7 @@
 """The signed-in owner's own account."""
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
-from flask_login import current_user, login_required
+from flask_login import current_user, login_required, logout_user
 from sqlalchemy import select
 
 from .auth import EMAIL_RE, MIN_PASSWORD_LENGTH, normalize_email
@@ -66,3 +66,16 @@ def password():
             return redirect(url_for("account.profile"))
     status = 422 if errors else 200
     return render_template("account/password.html", errors=errors), status
+
+
+@bp.post("/delete")
+def delete():
+    if not current_user.check_password(request.form.get("password", "")):
+        flash("Enter your password to delete your account.", "error")
+        return redirect(url_for("account.profile"))
+    user = db.session.get(User, current_user.id)
+    logout_user()
+    db.session.delete(user)
+    db.session.commit()
+    flash("Your account and all of your surveys were deleted.", "success")
+    return redirect(url_for("index"))

@@ -23,7 +23,9 @@ class User(UserMixin, db.Model):
     password_hash: Mapped[str] = mapped_column(String(255))
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
-    surveys: Mapped[list["Survey"]] = relationship(back_populates="owner")
+    surveys: Mapped[list["Survey"]] = relationship(
+        back_populates="owner", cascade="all, delete-orphan", passive_deletes=True
+    )
 
     def set_password(self, password: str) -> None:
         method = current_app.config.get("PASSWORD_HASH_METHOD", "scrypt")

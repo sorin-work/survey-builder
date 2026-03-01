@@ -19,4 +19,17 @@
     </form>
     <p><a href="{{ url_for('account.password') }}">Change your password</a></p>
   </section>
+  <section class="card narrow danger-zone">
+    <h2>Delete account</h2>
+    <p class="muted">Deletes your account, every survey you own and all of their responses.</p>
+    <form method="post" action="{{ url_for('account.delete') }}"
+          onsubmit="return confirm('Delete your account and everything in it?')">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="field">
+        <label for="delete-password">Password</label>
+        <input type="password" id="delete-password" name="password" autocomplete="current-password">
+      </div>
+      <button class="btn btn-danger" type="submit">Delete my account</button>
+    </form>
+  </section>
 {% endblock %}

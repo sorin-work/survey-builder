@@ -58,3 +58,23 @@ def test_change_password_checks_current_password(auth_client, owner, db):
 def test_change_password_rules(auth_client):
     assert b"at least 8" in change(auth_client, new="short").data
     assert b"do not match" in change(auth_client, confirm="something-else").data
+
+
+def test_delete_account_removes_surveys(auth_client, owner, db):
+    from factories import add_response, make_published_survey
+
+    from survey_builder.models import Response, Survey
+
+    survey = make_published_survey(owner)
+    add_response(survey, {survey.questions[0]: "x"})
+    resp = auth_client.post("/account/delete", data={"password": "s3cret-pass"})
+    assert resp.status_code == 302
+    assert db.session.query(User).count() == 0
+    assert db.session.query(Survey).count() == 0
+    assert db.session.query(Response).count() == 0
+    assert auth_client.get("/surveys/").status_code == 302
+
+
+def test_delete_account_needs_password(auth_client, db):
+    auth_client.post("/account/delete", data={"password": "wrong"})
+    assert db.session.query(User).count() == 1
