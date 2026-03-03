@@ -135,3 +135,19 @@ def test_invalid_share_settings(auth_client, owner):
     resp = auth_client.post(url, data={"title": "T", "response_limit": "0"})
     assert resp.status_code == 422
     assert b"at least 1" in resp.data
+
+
+def test_dashboard_search_and_status_filter(auth_client, owner, db):
+    make_survey(owner, title="Customer onboarding")
+    make_survey(owner, title="Team lunch", status="published")
+    make_survey(owner, title="Customer churn", status="closed")
+
+    html = auth_client.get("/surveys/?q=customer").get_data(as_text=True)
+    assert "Customer onboarding" in html and "Customer churn" in html
+    assert "Team lunch" not in html
+
+    html = auth_client.get("/surveys/?q=customer&status=closed").get_data(as_text=True)
+    assert "Customer churn" in html and "Customer onboarding" not in html
+
+    html = auth_client.get("/surveys/?q=nothing-like-this").get_data(as_text=True)
+    assert "No surveys match your filters" in html

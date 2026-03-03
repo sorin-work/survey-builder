@@ -5,6 +5,16 @@
     <h1>Your surveys</h1>
     <a class="btn" href="{{ url_for('surveys.create') }}">New survey</a>
   </div>
+  <form class="filters" method="get" role="search">
+    <input type="search" name="q" value="{{ query }}" placeholder="Search surveys" aria-label="Search surveys">
+    <select name="status" aria-label="Status">
+      <option value="">All statuses</option>
+      {% for value in ("draft", "published", "closed") %}
+        <option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ value|capitalize }}</option>
+      {% endfor %}
+    </select>
+    <button class="btn btn-secondary btn-small" type="submit">Filter</button>
+  </form>
   {% if surveys %}
     <ul class="survey-list">
       {% for survey in surveys %}
@@ -26,6 +36,11 @@
         </li>
       {% endfor %}
     </ul>
+  {% elif filtered %}
+    <div class="card empty">
+      <p>No surveys match your filters.</p>
+      <a href="{{ url_for('surveys.dashboard') }}">Clear filters</a>
+    </div>
   {% else %}
     <div class="card empty">
       <p>You have no surveys yet.</p>

@@ -64,9 +64,14 @@ def parse_share_settings(form) -> tuple[dict, dict[str, str]]:
 
 @bp.get("/")
 def dashboard():
-    surveys = db.session.scalars(
-        select(Survey).filter_by(owner_id=current_user.id).order_by(Survey.updated_at.desc())
-    ).all()
+    query = request.args.get("q", "").strip()
+    status = request.args.get("status", "")
+    stmt = select(Survey).filter_by(owner_id=current_user.id)
+    if query:
+        stmt = stmt.where(Survey.title.ilike(f"%{query}%"))
+    if status in (sharing.DRAFT, sharing.PUBLISHED, sharing.CLOSED):
+        stmt = stmt.filter_by(status=status)
+    surveys = db.session.scalars(stmt.order_by(Survey.updated_at.desc())).all()
     counts = dict(
         db.session.execute(
             select(Response.survey_id, db.func.count(Response.id))
@@ -75,7 +80,14 @@ def dashboard():
             .group_by(Response.survey_id)
         ).all()
     )
-    return render_template("surveys/dashboard.html", surveys=surveys, counts=counts)
+    return render_template(
+        "surveys/dashboard.html",
+        surveys=surveys,
+        counts=counts,
+        query=query,
+        status=status,
+        filtered=bool(query or status),
+    )
 
 
 @bp.route("/new", methods=["GET", "POST"])
