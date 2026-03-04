@@ -1,6 +1,11 @@
 """Simple offset pagination for list pages."""
 
+import math
 from dataclasses import dataclass
+
+
+def page_count(total: int, per_page: int) -> int:
+    return max(1, math.ceil(total / per_page))
 
 
 @dataclass(frozen=True)
@@ -15,12 +20,12 @@ class Pagination:
             page = int(raw_page)
         except (TypeError, ValueError):
             page = 1
-        pages = max(1, total // per_page)
+        pages = page_count(total, per_page)
         return cls(page=min(max(page, 1), pages), per_page=per_page, total=total)
 
     @property
     def pages(self) -> int:
-        return max(1, self.total // self.per_page)
+        return page_count(self.total, self.per_page)
 
     @property
     def offset(self) -> int:

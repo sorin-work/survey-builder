@@ -88,3 +88,14 @@ def test_cannot_delete_response_of_another_survey(auth_client, owner, db):
     resp = auth_client.post(f"/surveys/{mine.id}/results/responses/{response.id}/delete")
     assert resp.status_code == 404
     assert db.session.query(Response).count() == 1
+
+
+def test_last_partial_page_of_responses_is_reachable(auth_client, owner):
+    survey = make_published_survey(owner)
+    question = survey.questions[0]
+    for i in range(30):
+        add_response(survey, {question: f"r{i}"})
+    html = auth_client.get(f"/surveys/{survey.id}/results/responses").get_data(as_text=True)
+    assert "Page 1 of 2" in html and "Older" in html
+    html = auth_client.get(f"/surveys/{survey.id}/results/responses?page=2").get_data(as_text=True)
+    assert html.count("<tr>") == 1 + 5

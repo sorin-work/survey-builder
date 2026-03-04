@@ -23,3 +23,12 @@ def test_offset_of_later_pages():
     p = Pagination.from_request("3", total=75, per_page=25)
     assert p.offset == 50
     assert p.has_prev and not p.has_next
+
+
+def test_partial_last_page_is_counted():
+    p = Pagination.from_request("2", total=30, per_page=25)
+    assert p.pages == 2
+    assert p.page == 2
+    assert p.offset == 25
+    assert Pagination.from_request("1", total=26, per_page=25).has_next
+    assert Pagination.from_request("1", total=24, per_page=25).pages == 1
