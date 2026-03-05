@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_pager.html" import pager %}
 {% block title %}{{ question.prompt }} · {{ survey.title }}{% endblock %}
 {% block content %}
   <div class="page-header">
@@ -17,17 +18,7 @@
         </li>
       {% endfor %}
     </ul>
-    {% if pagination.pages > 1 %}
-      <nav class="pager">
-        {% if pagination.has_prev %}
-          <a href="{{ url_for('results.text_answers', survey_id=survey.id, question_id=question.id, page=pagination.page - 1) }}">&larr; Newer</a>
-        {% endif %}
-        <span class="muted">Page {{ pagination.page }} of {{ pagination.pages }}</span>
-        {% if pagination.has_next %}
-          <a href="{{ url_for('results.text_answers', survey_id=survey.id, question_id=question.id, page=pagination.page + 1) }}">Older &rarr;</a>
-        {% endif %}
-      </nav>
-    {% endif %}
+    {{ pager(pagination, 'results.text_answers', survey_id=survey.id, question_id=question.id) }}
   {% else %}
     <div class="card empty"><p>No answers yet.</p></div>
   {% endif %}

@@ -1,0 +1,14 @@
+{# Usage: {{ pager(pagination, "endpoint", **url_args) }} #}
+{% macro pager(pagination, endpoint) %}
+  {% if pagination.pages > 1 %}
+    <nav class="pager" aria-label="Pages">
+      {% if pagination.has_prev %}
+        <a href="{{ url_for(endpoint, page=pagination.page - 1, **kwargs) }}">&larr; Newer</a>
+      {% endif %}
+      <span class="muted">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+      {% if pagination.has_next %}
+        <a href="{{ url_for(endpoint, page=pagination.page + 1, **kwargs) }}">Older &rarr;</a>
+      {% endif %}
+    </nav>
+  {% endif %}
+{% endmacro %}
