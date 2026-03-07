@@ -76,3 +76,14 @@ def test_closed_page_explains_limit(client, owner, db):
     resp = client.get(f"/s/{survey.share_token}")
     assert resp.status_code == 410
     assert b"all the responses it needed" in resp.data
+
+
+def test_text_fields_get_a_character_counter(client, owner):
+    survey = make_published_survey(
+        owner, [[("long_text", "Story", {"settings": {"max_length": 300}})]]
+    )
+    question = survey.questions[0]
+    html = client.get(f"/s/{survey.share_token}").get_data(as_text=True)
+    assert f'data-counter="q{question.id}-count"' in html
+    assert f'id="q{question.id}-count"' in html
+    assert "js/public.js" in html

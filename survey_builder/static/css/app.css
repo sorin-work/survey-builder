@@ -688,3 +688,13 @@ select.move-page {
 .filters select {
   width: auto;
 }
+
+.counter {
+  font-size: 0.8rem;
+  text-align: right;
+  margin-top: 0.2rem;
+}
+
+.counter.near-limit {
+  color: var(--danger);
+}

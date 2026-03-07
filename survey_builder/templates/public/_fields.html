@@ -10,11 +10,17 @@
 
     {% if question.type == "short_text" %}
       <input type="text" name="{{ name }}" value="{{ values[0] if values else '' }}"
-             {% if s.max_length %}maxlength="{{ s.max_length }}"{% endif %} aria-label="{{ question.prompt }}">
+             {% if s.max_length %}maxlength="{{ s.max_length }}" data-counter="{{ name }}-count"{% endif %}
+             aria-label="{{ question.prompt }}">
     {% elif question.type == "long_text" %}
-      <textarea name="{{ name }}" rows="5" {% if s.max_length %}maxlength="{{ s.max_length }}"{% endif %}
+      <textarea name="{{ name }}" rows="5"
+                {% if s.max_length %}maxlength="{{ s.max_length }}" data-counter="{{ name }}-count"{% endif %}
                 aria-label="{{ question.prompt }}">{{ values[0] if values else '' }}</textarea>
-    {% elif question.type in ("single_choice", "multiple_choice") %}
+    {% endif %}
+    {% if question.type in ("short_text", "long_text") and s.max_length %}
+      <div class="counter muted" id="{{ name }}-count" aria-live="polite"></div>
+    {% endif %}
+    {% if question.type in ("single_choice", "multiple_choice") %}
       {% set input_type = "radio" if question.type == "single_choice" else "checkbox" %}
       <div class="options">
         {% for choice in question.choices %}
