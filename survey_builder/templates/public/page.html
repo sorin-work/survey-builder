@@ -11,7 +11,11 @@
     <h1>{{ survey.title }}</h1>
     {% if page_number == 1 and survey.description %}<p class="muted">{{ survey.description }}</p>{% endif %}
     {% if survey.pages|length > 1 %}
-      <p class="progress muted">Page {{ page_number }} of {{ survey.pages|length }}</p>
+      {% set percent = ((page_number - 1) / survey.pages|length * 100)|round|int %}
+      <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ percent }}">
+        <div class="progress-bar" style="width: {{ percent }}%"></div>
+      </div>
+      <p class="progress-label muted">Page {{ page_number }} of {{ survey.pages|length }}</p>
     {% endif %}
   </header>
   <form method="post" class="card" novalidate>

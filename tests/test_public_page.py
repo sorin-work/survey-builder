@@ -87,3 +87,17 @@ def test_text_fields_get_a_character_counter(client, owner):
     assert f'data-counter="q{question.id}-count"' in html
     assert f'id="q{question.id}-count"' in html
     assert "js/public.js" in html
+
+
+def test_progress_bar_reflects_the_page(client, owner):
+    survey = make_published_survey(
+        owner,
+        [[("short_text", "A", {})], [("short_text", "B", {})], [("short_text", "C", {})]],
+        title="Three pages",
+    )
+    html = client.get(f"/s/{survey.share_token}").get_data(as_text=True)
+    assert 'aria-valuenow="0"' in html
+    first = survey.pages[0]
+    client.post(f"/s/{survey.share_token}", data={"page_id": first.id})
+    html = client.get(f"/s/{survey.share_token}").get_data(as_text=True)
+    assert 'aria-valuenow="33"' in html
