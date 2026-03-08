@@ -54,7 +54,11 @@ def current_page(survey: Survey, state: dict) -> Page:
     return survey.pages[0]
 
 
-def store_answers(response: Response, parsed) -> None:
+def store_answers(response: Response, page: Page, parsed) -> None:
+    """Save the answers for one page, replacing any given earlier (after Back)."""
+    page_questions = {q.id for q in page.questions}
+    for existing in [a for a in response.answers if a.question_id in page_questions]:
+        response.answers.remove(existing)
     for answer in parsed:
         if answer.is_empty:
             continue
@@ -149,7 +153,7 @@ def submit(token: str):
         response = Response(survey=survey, key=secrets.token_hex(16))
         db.session.add(response)
         state["key"] = response.key
-    store_answers(response, parsed)
+    store_answers(response, page, parsed)
 
     following = next_page(survey, page, parsed)
     if following is None:

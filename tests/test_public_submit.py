@@ -152,3 +152,27 @@ def test_branch_rule_can_end_the_survey_early(client, owner, db):
     )
     assert resp.headers["Location"].endswith("/thanks")
     assert db.session.query(Response).one().is_complete
+
+
+def test_resubmitting_a_page_after_back_replaces_its_answers(client, owner, db):
+    survey = two_page_survey(owner)
+    page1, page2, name, pets, nps, _ = ids(survey)
+    url = f"/s/{survey.share_token}"
+    cat, dog, fish = pets.choices
+
+    client.post(url, data={"page_id": page1.id, f"q{name.id}": "Ana", f"q{pets.id}": [cat.id]})
+    client.post(f"{url}/back")
+    client.post(
+        url, data={"page_id": page1.id, f"q{name.id}": "Ana Pop", f"q{pets.id}": [dog.id, fish.id]}
+    )
+    client.post(url, data={"page_id": page2.id, f"q{nps.id}": "10"})
+
+    answers = db.session.query(Answer).all()
+    assert sorted((a.question_id, a.text_value, a.choice_id) for a in answers) == sorted(
+        [
+            (name.id, "Ana Pop", None),
+            (pets.id, None, dog.id),
+            (pets.id, None, fish.id),
+            (nps.id, None, None),
+        ]
+    )
