@@ -1,5 +1,7 @@
 from flask import Flask, redirect, render_template, url_for
 from flask_login import current_user
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 
 from . import models  # noqa: F401  (register models with SQLAlchemy)
 from .config import load_config
@@ -59,6 +61,11 @@ def create_app(config: dict | None = None) -> Flask:
 
     @app.get("/healthz")
     def healthz():
-        return {"status": "ok"}
+        try:
+            db.session.execute(text("SELECT 1"))
+        except SQLAlchemyError:
+            app.logger.exception("health check: database unavailable")
+            return {"status": "error", "database": "unavailable"}, 503
+        return {"status": "ok", "database": "ok"}
 
     return app

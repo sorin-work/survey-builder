@@ -1,7 +1,20 @@
+from sqlalchemy.exc import OperationalError
+
+
 def test_healthz_returns_ok(client):
     resp = client.get("/healthz")
     assert resp.status_code == 200
-    assert resp.get_json() == {"status": "ok"}
+    assert resp.get_json() == {"status": "ok", "database": "ok"}
+
+
+def test_healthz_reports_database_problems(client, db, monkeypatch):
+    def broken(*args, **kwargs):
+        raise OperationalError("SELECT 1", {}, Exception("connection refused"))
+
+    monkeypatch.setattr(db.session, "execute", broken)
+    resp = client.get("/healthz")
+    assert resp.status_code == 503
+    assert resp.get_json()["database"] == "unavailable"
 
 
 def test_landing_page_renders(client):
