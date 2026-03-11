@@ -44,6 +44,13 @@ def create_app(config: dict | None = None) -> Flask:
     register_cli(app)
     register_error_pages(app)
 
+    @app.after_request
+    def security_headers(response):
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("X-Frame-Options", "DENY")
+        response.headers.setdefault("Referrer-Policy", "same-origin")
+        return response
+
     @app.get("/")
     def index():
         if current_user.is_authenticated:

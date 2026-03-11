@@ -16,3 +16,15 @@ def test_postgres_urls_use_psycopg_driver(monkeypatch):
 def test_explicit_driver_is_kept(monkeypatch):
     monkeypatch.setenv("DATABASE_URL", "postgresql+psycopg://u:p@db/surveys")
     assert _database_url() == "postgresql+psycopg://u:p@db/surveys"
+
+
+def test_cookie_flags(monkeypatch):
+    from survey_builder.config import load_config
+
+    monkeypatch.delenv("SECURE_COOKIES", raising=False)
+    config = load_config()
+    assert config["SESSION_COOKIE_HTTPONLY"] is True
+    assert config["SESSION_COOKIE_SAMESITE"] == "Lax"
+    assert config["SESSION_COOKIE_SECURE"] is False
+    monkeypatch.setenv("SECURE_COOKIES", "true")
+    assert load_config()["SESSION_COOKIE_SECURE"] is True

@@ -11,9 +11,23 @@ def _database_url() -> str:
     return url
 
 
+def _flag(name: str, default: bool = False) -> bool:
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return value.strip().lower() in ("1", "true", "yes", "on")
+
+
 def load_config() -> dict:
+    secure_cookies = _flag("SECURE_COOKIES")
     return {
         "SECRET_KEY": os.environ.get("SECRET_KEY", "dev-secret-change-me"),
         "SQLALCHEMY_DATABASE_URI": _database_url(),
         "SQLALCHEMY_ENGINE_OPTIONS": {"pool_pre_ping": True},
+        "SESSION_COOKIE_HTTPONLY": True,
+        "SESSION_COOKIE_SAMESITE": "Lax",
+        "SESSION_COOKIE_SECURE": secure_cookies,
+        "REMEMBER_COOKIE_HTTPONLY": True,
+        "REMEMBER_COOKIE_SAMESITE": "Lax",
+        "REMEMBER_COOKIE_SECURE": secure_cookies,
     }
