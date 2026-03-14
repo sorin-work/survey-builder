@@ -5,12 +5,15 @@ questions submit choice ids; multiple choice questions may submit the field
 several times.
 """
 
+import re
 from dataclasses import dataclass, field
 from datetime import date
 
 from .question_types import DATE, LONG_TEXT, MULTIPLE_CHOICE, NPS, RATING, SHORT_TEXT, SINGLE_CHOICE
 
 REQUIRED_MESSAGE = "This question is required."
+EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+NUMBER_RE = re.compile(r"^-?\d+([.,]\d+)?$")
 
 
 def field_name(question) -> str:
@@ -50,6 +53,11 @@ def _parse_text(question, raw: str, answer: ParsedAnswer) -> str | None:
         return f"Please write at least {min_length} characters."
     if max_length and len(value) > max_length:
         return f"Please keep it under {max_length} characters."
+    text_format = settings.get("format")
+    if text_format == "email" and not EMAIL_RE.match(value):
+        return "Please enter a valid email address."
+    if text_format == "number" and not NUMBER_RE.match(value):
+        return "Please enter a number."
     answer.text = value
     return None
 

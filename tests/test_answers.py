@@ -131,3 +131,18 @@ def test_whitespace_in_optional_text_is_stored_as_no_answer():
     answer, error = parse_answer(Q(1, "short_text"), form(q1="   "))
     assert error is None
     assert answer.is_empty
+
+
+def test_email_format():
+    question = Q(1, "short_text", settings={"format": "email"})
+    assert parse_answer(question, form(q1="ana@example.com"))[1] is None
+    assert (
+        parse_answer(question, form(q1="ana at example"))[1]
+        == "Please enter a valid email address."
+    )
+
+
+@pytest.mark.parametrize("raw, ok", [("42", True), ("-3.5", True), ("3,14", True), ("4 2", False)])
+def test_number_format(raw, ok):
+    question = Q(1, "short_text", settings={"format": "number"})
+    assert (parse_answer(question, form(q1=raw))[1] is None) is ok

@@ -81,3 +81,15 @@ def test_date_bounds():
 
 def test_single_choice_has_no_settings():
     assert parse_settings("single_choice", {"scale": "4"}) == ({}, {})
+
+
+def test_short_text_format():
+    settings, errors = parse_settings("short_text", {"format": "email"})
+    assert errors == {}
+    assert settings["format"] == "email"
+    settings, _ = parse_settings("short_text", {"format": ""})
+    assert "format" not in settings
+    _, errors = parse_settings("short_text", {"format": "phone"})
+    assert "format" in errors
+    settings, _ = parse_settings("long_text", {"format": "email"})
+    assert "format" not in settings

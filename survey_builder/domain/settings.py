@@ -16,6 +16,7 @@ from .question_types import (
 )
 
 TEXT_LIMITS = {SHORT_TEXT: 1000, LONG_TEXT: 10000}
+TEXT_FORMATS = {"": "Any text", "email": "Email address", "number": "Number"}
 RATING_SCALES = range(3, 11)
 LABEL_MAX = 60
 
@@ -68,6 +69,12 @@ def parse_settings(qtype: str, form) -> tuple[dict, dict[str, str]]:
         settings["max_length"] = max_length or limit
         if min_length:
             settings["min_length"] = min_length
+        if qtype == SHORT_TEXT:
+            text_format = (form.get("format") or "").strip()
+            if text_format not in TEXT_FORMATS:
+                errors["format"] = "Pick one of the formats."
+            elif text_format:
+                settings["format"] = text_format
 
     elif qtype == MULTIPLE_CHOICE:
         min_choices = _int_or_none(form.get("min_choices"), "min_choices", errors)
