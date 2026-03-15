@@ -9,7 +9,10 @@
     {% if question.help_text %}<p class="help muted">{{ question.help_text }}</p>{% endif %}
 
     {% if question.type == "short_text" %}
-      <input type="text" name="{{ name }}" value="{{ values[0] if values else '' }}"
+      {% set input_type = {"email": "email", "number": "text"}.get(s.format, "text") %}
+      <input type="{{ input_type }}" name="{{ name }}" value="{{ values[0] if values else '' }}"
+             {% if s.format == "number" %}inputmode="decimal"{% endif %}
+             {% if s.format == "email" %}autocomplete="email"{% endif %}
              {% if s.max_length %}maxlength="{{ s.max_length }}" data-counter="{{ name }}-count"{% endif %}
              aria-label="{{ question.prompt }}">
     {% elif question.type == "long_text" %}

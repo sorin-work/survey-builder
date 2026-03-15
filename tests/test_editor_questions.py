@@ -207,3 +207,14 @@ def test_move_question_to_foreign_page_is_404(auth_client, owner, db):
         data={"page_id": other.pages[0].id},
     )
     assert resp.status_code == 404
+
+
+def test_short_text_format_setting(auth_client, owner, db):
+    survey = make_survey(owner)
+    add_question(auth_client, survey, "short_text")
+    question = db.session.query(Question).one()
+    resp = update(auth_client, survey, question, prompt="Email", format="email")
+    assert resp.status_code == 200
+    db.session.refresh(question)
+    assert question.settings["format"] == "email"
+    assert 'value="email" selected' in resp.get_data(as_text=True)

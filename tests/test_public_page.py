@@ -101,3 +101,11 @@ def test_progress_bar_reflects_the_page(client, owner):
     client.post(f"/s/{survey.share_token}", data={"page_id": first.id})
     html = client.get(f"/s/{survey.share_token}").get_data(as_text=True)
     assert 'aria-valuenow="33"' in html
+
+
+def test_email_questions_use_an_email_input(client, owner):
+    survey = make_published_survey(
+        owner, [[("short_text", "Email", {"settings": {"format": "email"}})]], title="Emails"
+    )
+    html = client.get(f"/s/{survey.share_token}").get_data(as_text=True)
+    assert 'type="email"' in html

@@ -26,6 +26,17 @@
   <summary>Options</summary>
   <div class="settings-grid">
     {% if question.type in ("short_text", "long_text") %}
+      {% if question.type == "short_text" %}
+        <div class="setting">
+          <label for="format-{{ question.id }}">Format</label>
+          <select id="format-{{ question.id }}" name="format">
+            {% for value, label in TEXT_FORMATS.items() %}
+              <option value="{{ value }}" {% if (s.format or "") == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+          {% if errors.format %}<div class="field-error">{{ errors.format }}</div>{% endif %}
+        </div>
+      {% endif %}
       {{ number("min_length", "Minimum length", s.min_length) }}
       {{ number("max_length", "Maximum length", s.max_length, min=1) }}
     {% elif question.type == "multiple_choice" %}
