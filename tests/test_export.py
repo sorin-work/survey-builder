@@ -76,3 +76,20 @@ def test_export_respects_the_period(auth_client, owner, db):
     assert "February" in body and "January" not in body
     html = auth_client.get(f"/surveys/{survey.id}/results/?from=2026-02-01").get_data(as_text=True)
     assert "export.csv?from=2026-02-01" in html
+
+
+def test_columns_follow_the_survey_order_after_moving_questions(auth_client, owner, db):
+    survey = build(owner)
+    name, pets, nps, visited = survey.questions
+    # Move "Name" to the end of the second page, then "Visited" to the top of it.
+    auth_client.post(
+        f"/surveys/{survey.id}/questions/{name.id}/page", data={"page_id": survey.pages[1].id}
+    )
+    auth_client.post(f"/surveys/{survey.id}/questions/{visited.id}/move", data={"direction": "up"})
+    db.session.expire_all()
+    add_response(survey, {name: "Ana", pets: "Dog", nps: 7, visited: date(2026, 3, 1)})
+
+    header, row = list(export_rows(survey))
+    assert header[2:] == [q.prompt for q in survey.questions]
+    assert header[2:] == ["Pets", "Visited", "Recommend", "Name"]
+    assert row[2:] == ["Dog", "2026-03-01", "7", "Ana"]

@@ -29,7 +29,8 @@ def _cell(question, answers: list[Answer]) -> str:
 
 
 def export_rows(survey, period: Period = ALL_TIME):
-    questions = sorted(survey.questions, key=lambda q: q.id)
+    # Same order as respondents see them: page by page, top to bottom.
+    questions = survey.questions
     yield ["response_id", "submitted_at", *(q.prompt for q in questions)]
 
     responses = db.session.scalars(
