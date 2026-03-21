@@ -20,6 +20,7 @@ def create_app(config: dict | None = None) -> Flask:
     csrf.init_app(app)
 
     from .account import bp as account_bp
+    from .api import bp as api_bp
     from .auth import bp as auth_bp
     from .editor import bp as editor_bp
     from .public import bp as public_bp
@@ -32,6 +33,7 @@ def create_app(config: dict | None = None) -> Flask:
     app.register_blueprint(editor_bp)
     app.register_blueprint(public_bp)
     app.register_blueprint(results_bp)
+    app.register_blueprint(api_bp)
 
     from .domain.question_types import QUESTION_TYPES
     from .domain.settings import TEXT_FORMATS
