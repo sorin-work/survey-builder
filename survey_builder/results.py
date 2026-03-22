@@ -59,8 +59,19 @@ def responses(survey_id: int):
         .offset(pagination.offset)
         .limit(pagination.per_page)
     ).all()
+    answered = dict(
+        db.session.execute(
+            select(Answer.response_id, db.func.count(db.distinct(Answer.question_id)))
+            .where(Answer.response_id.in_([r.id for r in rows]))
+            .group_by(Answer.response_id)
+        ).all()
+    )
     return render_template(
-        "results/responses.html", survey=survey, responses=rows, pagination=pagination
+        "results/responses.html",
+        survey=survey,
+        responses=rows,
+        answered=answered,
+        pagination=pagination,
     )
 
 

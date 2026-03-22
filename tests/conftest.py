@@ -56,3 +56,26 @@ def auth_client(client, owner):
 
     login(client, owner)
     return client
+
+
+@pytest.fixture
+def count_queries(db):
+    """Counts SQL statements run inside the ``with count_queries() as counter`` block."""
+    from contextlib import contextmanager
+
+    from sqlalchemy import event
+
+    @contextmanager
+    def counter():
+        statements = []
+
+        def before(conn, cursor, statement, *args):
+            statements.append(statement)
+
+        event.listen(db.engine, "before_cursor_execute", before)
+        try:
+            yield statements
+        finally:
+            event.remove(db.engine, "before_cursor_execute", before)
+
+    return counter

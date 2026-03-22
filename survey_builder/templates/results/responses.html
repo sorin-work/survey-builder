@@ -14,13 +14,13 @@
     <div class="card empty"><p>No completed responses yet.</p></div>
   {% else %}
     <table class="card result-table responses-table">
-      <thead><tr><th>#</th><th>Submitted</th><th class="num">Answers</th></tr></thead>
+      <thead><tr><th>#</th><th>Submitted</th><th class="num">Questions answered</th></tr></thead>
       <tbody>
         {% for response in responses %}
           <tr>
             <td><a href="{{ url_for('results.response_detail', survey_id=survey.id, response_id=response.id) }}">{{ response.id }}</a></td>
             <td>{{ response.completed_at.strftime("%Y-%m-%d %H:%M") }} UTC</td>
-            <td class="num">{{ response.answers|length }}</td>
+            <td class="num">{{ answered.get(response.id, 0) }}</td>
           </tr>
         {% endfor %}
       </tbody>

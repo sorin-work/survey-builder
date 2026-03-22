@@ -99,3 +99,16 @@ def test_last_partial_page_of_responses_is_reachable(auth_client, owner):
     assert "Page 1 of 2" in html and "Older" in html
     html = auth_client.get(f"/surveys/{survey.id}/results/responses?page=2").get_data(as_text=True)
     assert html.count("<tr>") == 1 + 5
+
+
+def test_responses_list_does_not_query_once_per_row(auth_client, owner, count_queries):
+    survey = make_published_survey(
+        owner, [[("short_text", "Name", {}), ("multiple_choice", "Pets", {"choices": ["a", "b"]})]]
+    )
+    name, pets = survey.questions
+    for i in range(20):
+        add_response(survey, {name: f"r{i}", pets: ["a", "b"]})
+    with count_queries() as statements:
+        html = auth_client.get(f"/surveys/{survey.id}/results/responses").get_data(as_text=True)
+    assert len(statements) < 10
+    assert html.count('<td class="num">2</td>') == 20
