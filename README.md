@@ -46,6 +46,10 @@ flask run --debug
 
 Without `DATABASE_URL` the app uses a local SQLite file.
 
+## API
+
+A read-only JSON API is described in [docs/api.md](docs/api.md).
+
 ## Tests
 
 ```bash
