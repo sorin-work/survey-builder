@@ -47,6 +47,9 @@
               hx-post="{{ url_for('editor.delete_question', survey_id=survey.id, question_id=question.id) }}"
               hx-target="#question-{{ question.id }}" hx-swap="outerHTML"
               hx-confirm="Delete this question?">Delete</button>
+      <button class="link" type="button"
+              hx-post="{{ url_for('editor.duplicate_question', survey_id=survey.id, question_id=question.id) }}"
+              hx-target="#page-{{ question.page_id }}" hx-swap="outerHTML">Duplicate</button>
       {% if survey.pages|length > 1 %}
         <select class="move-page" name="page_id" aria-label="Move to page"
                 hx-post="{{ url_for('editor.move_question_to_page', survey_id=survey.id, question_id=question.id) }}"

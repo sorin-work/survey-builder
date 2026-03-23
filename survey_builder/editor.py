@@ -269,6 +269,29 @@ def delete_question(survey_id: int, question_id: int):
     return back_to_editor(survey, f"page-{page.id}")
 
 
+@bp.post("/questions/<int:question_id>/duplicate")
+def duplicate_question(survey_id: int, question_id: int):
+    survey = get_owned_survey(survey_id)
+    question = get_question(survey, question_id)
+    page = question.page
+    clone = Question(
+        type=question.type,
+        prompt=f"{question.prompt} (copy)"[:PROMPT_MAX],
+        help_text=question.help_text,
+        required=question.required,
+        settings=dict(question.settings or {}),
+    )
+    clone.choices = [Choice(label=c.label, position=c.position) for c in question.choices]
+    questions = list(page.questions)
+    questions.insert(questions.index(question) + 1, clone)
+    page.questions = questions
+    renumber(questions)
+    db.session.commit()
+    if is_htmx():
+        return render_template("editor/_page.html", survey=survey, page=page)
+    return back_to_editor(survey, f"question-{clone.id}")
+
+
 @bp.post("/questions/<int:question_id>/move")
 def move_question(survey_id: int, question_id: int):
     survey = get_owned_survey(survey_id)

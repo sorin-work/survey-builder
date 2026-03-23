@@ -218,3 +218,25 @@ def test_short_text_format_setting(auth_client, owner, db):
     db.session.refresh(question)
     assert question.settings["format"] == "email"
     assert 'value="email" selected' in resp.get_data(as_text=True)
+
+
+def test_duplicate_question_is_inserted_below(auth_client, owner, db):
+    from survey_builder.models import Choice
+
+    survey = make_survey(owner)
+    page = survey.pages[0]
+    first = Question(
+        type="multiple_choice", prompt="Pets", required=True, settings={"max_choices": 2}
+    )
+    first.choices = [Choice(label="Cat", position=0), Choice(label="Dog", position=1)]
+    page.questions = [first, Question(type="short_text", prompt="Name", position=1)]
+    db.session.commit()
+
+    resp = auth_client.post(f"/surveys/{survey.id}/questions/{first.id}/duplicate", headers=HX)
+    assert resp.status_code == 200
+    db.session.expire_all()
+    assert [q.prompt for q in page.questions] == ["Pets", "Pets (copy)", "Name"]
+    copy = page.questions[1]
+    assert [c.label for c in copy.choices] == ["Cat", "Dog"]
+    assert copy.required and copy.settings == {"max_choices": 2}
+    assert [q.position for q in page.questions] == [0, 1, 2]
