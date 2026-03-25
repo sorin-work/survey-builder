@@ -23,7 +23,8 @@
     <input type="hidden" name="page_id" value="{{ page.id }}">
     {% if page.title %}<h2>{{ page.title }}</h2>{% endif %}
     {% for question in page.questions %}
-      {{ render_question(question, values.get(question.id, []), errors.get(question.id)) }}
+      {{ render_question(question, values.get(question.id, []), errors.get(question.id),
+                         survey.question_number(question)) }}
     {% endfor %}
     <div class="form-nav">
       {% if can_go_back and not preview %}

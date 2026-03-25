@@ -66,6 +66,10 @@ class Survey(db.Model):
     def questions(self) -> list["Question"]:
         return [q for page in self.pages for q in page.questions]
 
+    def question_number(self, question: "Question") -> int:
+        """1-based number of a question across all pages."""
+        return self.questions.index(question) + 1
+
     def __repr__(self) -> str:
         return f"<Survey {self.id} {self.title!r}>"
 

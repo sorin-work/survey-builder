@@ -109,3 +109,16 @@ def test_email_questions_use_an_email_input(client, owner):
     )
     html = client.get(f"/s/{survey.share_token}").get_data(as_text=True)
     assert 'type="email"' in html
+
+
+def test_questions_are_numbered_across_pages(client, owner, db):
+    survey = make_published_survey(
+        owner,
+        [[("short_text", "A", {}), ("short_text", "B", {})], [("short_text", "C", {})]],
+        title="Numbered",
+    )
+    html = client.get(f"/s/{survey.share_token}").get_data(as_text=True)
+    assert '<span class="question-number">2.</span>' in html
+    client.post(f"/s/{survey.share_token}", data={"page_id": survey.pages[0].id})
+    html = client.get(f"/s/{survey.share_token}").get_data(as_text=True)
+    assert '<span class="question-number">3.</span>' in html

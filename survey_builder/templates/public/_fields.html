@@ -1,8 +1,9 @@
-{% macro render_question(question, values, error) %}
+{% macro render_question(question, values, error, number=None) %}
   {% set name = "q" ~ question.id %}
   {% set s = question.settings or {} %}
   <fieldset class="public-question{% if error %} has-error{% endif %}" id="{{ name }}">
     <legend>
+      {% if number %}<span class="question-number">{{ number }}.</span>{% endif %}
       {{ question.prompt }}
       {% if question.required %}<span class="required" title="Required">*</span>{% endif %}
     </legend>

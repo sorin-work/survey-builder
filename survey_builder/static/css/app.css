@@ -717,3 +717,8 @@ select.move-page {
   font-size: 0.85rem;
   margin: 0.25rem 0 0;
 }
+
+.question-number {
+  color: var(--muted);
+  margin-right: 0.25rem;
+}
