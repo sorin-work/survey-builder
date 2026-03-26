@@ -3,6 +3,7 @@
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from datetime import date, datetime, time, timedelta
+from fractions import Fraction
 
 from sqlalchemy import select
 
@@ -48,7 +49,10 @@ class NpsScore:
         """Net Promoter Score: % promoters minus % detractors, from -100 to 100."""
         if not self.total:
             return None
-        return (self.promoters - self.detractors) * 100 // self.total
+        # Round half away from zero, like the usual NPS calculators do.
+        exact = Fraction(self.promoters - self.detractors, self.total) * 100
+        rounded = int(abs(exact) + Fraction(1, 2))
+        return rounded if exact >= 0 else -rounded
 
 
 def nps_score(values) -> NpsScore:

@@ -40,3 +40,17 @@ def test_results_page_shows_nps(auth_client, owner):
     html = auth_client.get(f"/surveys/{survey.id}/results/").get_data(as_text=True)
     assert '<span class="stat-value">100</span><span class="muted">NPS</span>' in html
     assert "Promoters 1" in html
+
+
+def test_score_is_rounded_not_floored():
+    # 1 promoter, 2 detractors: -33.3 -> -33 (floor division gave -34)
+    assert nps_score([10, 0, 0]).score == -33
+    # 2 promoters, 1 detractor: 33.3 -> 33
+    assert nps_score([10, 10, 0]).score == 33
+    # 2 promoters, 1 passive: 66.7 -> 67
+    assert nps_score([10, 9, 7]).score == 67
+    # 1 detractor, 2 passives: -33.3 -> -33
+    assert nps_score([5, 7, 8]).score == -33
+    # Halves round away from zero: 1 promoter, 7 others (12.5) -> 13, and -12.5 -> -13
+    assert nps_score([10] + [7] * 7).score == 13
+    assert nps_score([0] + [7] * 7).score == -13
