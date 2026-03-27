@@ -1,0 +1,26 @@
+from datetime import timedelta
+
+from factories import add_response, make_published_survey
+
+from survey_builder.cli import prune_incomplete
+from survey_builder.models import Answer, Response, utcnow
+
+
+def test_prune_incomplete_keeps_recent_and_completed(owner, db):
+    survey = make_published_survey(owner)
+    question = survey.questions[0]
+    old_draft = add_response(survey, {question: "old"}, completed=False)
+    old_draft.started_at = utcnow() - timedelta(days=45)
+    add_response(survey, {question: "new"}, completed=False)
+    done = add_response(survey, {question: "done"})
+    done.started_at = utcnow() - timedelta(days=90)
+    db.session.commit()
+
+    assert prune_incomplete(30) == 1
+    assert db.session.query(Response).count() == 2
+    assert db.session.query(Answer).filter_by(text_value="old").count() == 0
+
+
+def test_prune_incomplete_command(app, owner, db):
+    result = app.test_cli_runner().invoke(args=["prune-incomplete", "--days", "7"])
+    assert "Removed 0 abandoned responses." in result.output
