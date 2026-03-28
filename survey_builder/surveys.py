@@ -75,7 +75,8 @@ def dashboard():
     status = request.args.get("status", "")
     stmt = select(Survey).filter_by(owner_id=current_user.id)
     if query:
-        stmt = stmt.where(Survey.title.ilike(f"%{query}%"))
+        escaped = query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        stmt = stmt.where(Survey.title.ilike(f"%{escaped}%", escape="\\"))
     if status in (sharing.DRAFT, sharing.PUBLISHED, sharing.CLOSED):
         stmt = stmt.filter_by(status=status)
     sort = request.args.get("sort", "updated")

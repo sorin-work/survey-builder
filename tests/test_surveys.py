@@ -162,3 +162,13 @@ def test_dashboard_sorting(auth_client, owner, db):
     html = auth_client.get("/surveys/?sort=created").get_data(as_text=True)
     assert html.index("Cherry") < html.index("Banana")
     assert auth_client.get("/surveys/?sort=bogus").status_code == 200
+
+
+def test_dashboard_search_treats_wildcards_literally(auth_client, owner):
+    make_survey(owner, title="100% satisfaction")
+    make_survey(owner, title="Q1_review")
+    make_survey(owner, title="Plain")
+    html = auth_client.get("/surveys/?q=%25").get_data(as_text=True)
+    assert "100% satisfaction" in html and "Plain" not in html
+    html = auth_client.get("/surveys/?q=_").get_data(as_text=True)
+    assert "Q1_review" in html and "Plain" not in html
