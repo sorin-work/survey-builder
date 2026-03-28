@@ -62,6 +62,13 @@ def parse_share_settings(form) -> tuple[dict, dict[str, str]]:
     return values, errors
 
 
+SORTS = {
+    "updated": ("Recently updated", Survey.updated_at.desc()),
+    "created": ("Newest first", Survey.created_at.desc()),
+    "title": ("Title A-Z", db.func.lower(Survey.title)),
+}
+
+
 @bp.get("/")
 def dashboard():
     query = request.args.get("q", "").strip()
@@ -71,7 +78,10 @@ def dashboard():
         stmt = stmt.where(Survey.title.ilike(f"%{query}%"))
     if status in (sharing.DRAFT, sharing.PUBLISHED, sharing.CLOSED):
         stmt = stmt.filter_by(status=status)
-    surveys = db.session.scalars(stmt.order_by(Survey.updated_at.desc())).all()
+    sort = request.args.get("sort", "updated")
+    if sort not in SORTS:
+        sort = "updated"
+    surveys = db.session.scalars(stmt.order_by(SORTS[sort][1], Survey.id.desc())).all()
     counts = dict(
         db.session.execute(
             select(Response.survey_id, db.func.count(Response.id))
@@ -86,6 +96,8 @@ def dashboard():
         counts=counts,
         query=query,
         status=status,
+        sort=sort,
+        sorts={key: label for key, (label, _) in SORTS.items()},
         filtered=bool(query or status),
     )
 

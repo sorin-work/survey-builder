@@ -13,6 +13,11 @@
         <option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ value|capitalize }}</option>
       {% endfor %}
     </select>
+    <select name="sort" aria-label="Sort by">
+      {% for key, label in sorts.items() %}
+        <option value="{{ key }}" {% if sort == key %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
     <button class="btn btn-secondary btn-small" type="submit">Filter</button>
   </form>
   {% if surveys %}

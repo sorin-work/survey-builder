@@ -151,3 +151,14 @@ def test_dashboard_search_and_status_filter(auth_client, owner, db):
 
     html = auth_client.get("/surveys/?q=nothing-like-this").get_data(as_text=True)
     assert "No surveys match your filters" in html
+
+
+def test_dashboard_sorting(auth_client, owner, db):
+    for title in ("Banana", "apple", "Cherry"):
+        make_survey(owner, title=title)
+    html = auth_client.get("/surveys/?sort=title").get_data(as_text=True)
+    positions = [html.index(t) for t in ("apple", "Banana", "Cherry")]
+    assert positions == sorted(positions)
+    html = auth_client.get("/surveys/?sort=created").get_data(as_text=True)
+    assert html.index("Cherry") < html.index("Banana")
+    assert auth_client.get("/surveys/?sort=bogus").status_code == 200
