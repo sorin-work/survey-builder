@@ -42,3 +42,11 @@ def test_incomplete_responses_do_not_count_towards_limit(owner, db):
     for _ in range(3):
         add_response(survey, {survey.questions[0]: "x"}, completed=False)
     assert is_accepting_responses(survey)
+
+
+def test_survey_stays_open_for_the_whole_close_date(owner, db):
+    survey = make_published_survey(owner)
+    survey.closes_on = date(2026, 3, 10)
+    assert is_accepting_responses(survey, now=datetime(2026, 3, 10, 0, 0))
+    assert is_accepting_responses(survey, now=datetime(2026, 3, 10, 23, 59, 59))
+    assert closed_reason(survey, now=datetime(2026, 3, 11, 0, 0)) == "date"
