@@ -240,3 +240,14 @@ def test_duplicate_question_is_inserted_below(auth_client, owner, db):
     assert [c.label for c in copy.choices] == ["Cat", "Dog"]
     assert copy.required and copy.settings == {"max_choices": 2}
     assert [q.position for q in page.questions] == [0, 1, 2]
+
+
+def test_htmx_is_told_to_swap_validation_errors(auth_client, owner):
+    import json
+    import re
+
+    survey = make_survey(owner)
+    html = auth_client.get(f"/surveys/{survey.id}/edit").get_data(as_text=True)
+    config = json.loads(re.search(r'name="htmx-config" content=\'([^\']+)\'', html).group(1))
+    rule = next(r for r in config["responseHandling"] if r["code"] == "422")
+    assert rule["swap"] is True
