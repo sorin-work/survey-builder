@@ -44,6 +44,10 @@ def create_app(config: dict | None = None) -> Flask:
     app.jinja_env.filters["duration"] = duration
     app.jinja_env.filters["nl2br"] = nl2br
 
+    from .domain.estimate import estimated_minutes
+
+    app.jinja_env.globals["estimated_minutes"] = estimated_minutes
+
     from .cli import register_cli
     from .errors import register_error_pages
 

@@ -5,6 +5,11 @@
     <div>
       <a class="muted" href="{{ url_for('surveys.dashboard') }}">&larr; All surveys</a>
       <h1>{{ survey.title }}</h1>
+      {% set count = survey.questions|length %}
+      <p class="muted small">
+        {{ count }} question{{ "" if count == 1 else "s" }} on {{ survey.pages|length }} page{{ "" if survey.pages|length == 1 else "s" }}
+        {%- if count %} &middot; about {{ estimated_minutes(survey.questions) }} min to complete{% endif %}
+      </p>
     </div>
     <div class="header-actions">
       <a class="btn btn-secondary" href="{{ url_for('results.summary', survey_id=survey.id) }}">Results</a>
