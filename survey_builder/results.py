@@ -31,6 +31,14 @@ def _require_login():
     pass
 
 
+def get_survey_response(survey, response_id: int) -> Response:
+    """A response of ``survey``; 404 for unknown ids and responses of other surveys."""
+    response = db.session.get(Response, response_id)
+    if response is None or response.survey_id != survey.id:
+        abort(404)
+    return response
+
+
 @bp.get("/")
 def summary(survey_id: int):
     survey = get_owned_survey(survey_id)
@@ -78,9 +86,7 @@ def responses(survey_id: int):
 @bp.get("/responses/<int:response_id>")
 def response_detail(survey_id: int, response_id: int):
     survey = get_owned_survey(survey_id)
-    response = db.session.get(Response, response_id)
-    if response is None:
-        abort(404)
+    response = get_survey_response(survey, response_id)
     by_question: dict[int, list] = {}
     for answer in response.answers:
         by_question.setdefault(answer.question_id, []).append(answer)
@@ -92,9 +98,7 @@ def response_detail(survey_id: int, response_id: int):
 @bp.post("/responses/<int:response_id>/delete")
 def delete_response(survey_id: int, response_id: int):
     survey = get_owned_survey(survey_id)
-    response = db.session.get(Response, response_id)
-    if response is None or response.survey_id != survey.id:
-        abort(404)
+    response = get_survey_response(survey, response_id)
     db.session.delete(response)
     db.session.commit()
     flash(f"Response #{response_id} deleted.", "success")

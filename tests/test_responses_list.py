@@ -112,3 +112,12 @@ def test_responses_list_does_not_query_once_per_row(auth_client, owner, count_qu
         html = auth_client.get(f"/surveys/{survey.id}/results/responses").get_data(as_text=True)
     assert len(statements) < 10
     assert html.count('<td class="num">2</td>') == 20
+
+
+def test_cannot_view_a_response_of_someone_elses_survey(auth_client, owner):
+    mine = make_published_survey(owner, title="Mine")
+    theirs = make_published_survey(make_user("other@example.com"), title="Theirs")
+    secret = add_response(theirs, {theirs.questions[0]: "private answer"})
+    resp = auth_client.get(f"/surveys/{mine.id}/results/responses/{secret.id}")
+    assert resp.status_code == 404
+    assert b"private answer" not in resp.data
