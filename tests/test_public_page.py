@@ -122,3 +122,14 @@ def test_questions_are_numbered_across_pages(client, owner, db):
     client.post(f"/s/{survey.share_token}", data={"page_id": survey.pages[0].id})
     html = client.get(f"/s/{survey.share_token}").get_data(as_text=True)
     assert '<span class="question-number">3.</span>' in html
+
+
+def test_first_page_shows_estimate_and_required_hint(client, owner):
+    survey = make_published_survey(
+        owner,
+        [[("short_text", "Name", {"required": True})], [("long_text", "More", {})]],
+        title="Hints",
+    )
+    html = client.get(f"/s/{survey.share_token}").get_data(as_text=True)
+    assert "Takes about 2 minutes." in html
+    assert "are required" in html

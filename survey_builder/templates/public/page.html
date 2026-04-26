@@ -9,7 +9,11 @@
   {% endif %}
   <header class="survey-header">
     <h1>{{ survey.title }}</h1>
-    {% if page_number == 1 and survey.description %}<p class="muted">{{ survey.description }}</p>{% endif %}
+    {% if page_number == 1 %}
+      {% if survey.description %}<p class="muted">{{ survey.description }}</p>{% endif %}
+      <p class="muted small">Takes about {{ estimated_minutes(survey.questions) }} minute{{ "" if estimated_minutes(survey.questions) == 1 else "s" }}.
+        {% if survey.questions|selectattr("required")|list %}Questions marked <span class="required">*</span> are required.{% endif %}</p>
+    {% endif %}
     {% if survey.pages|length > 1 %}
       {% set percent = ((page_number - 1) / survey.pages|length * 100)|round|int %}
       <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ percent }}">
