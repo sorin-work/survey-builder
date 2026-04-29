@@ -79,8 +79,14 @@ def test_date_bounds():
     assert "min_date" in errors
 
 
-def test_single_choice_has_no_settings():
+def test_single_choice_ignores_unrelated_settings():
     assert parse_settings("single_choice", {"scale": "4"}) == ({}, {})
+
+
+def test_shuffle_option():
+    assert parse_settings("single_choice", {"shuffle": "on"}) == ({"shuffle": True}, {})
+    settings, _ = parse_settings("multiple_choice", {"shuffle": "on", "max_choices": "2"})
+    assert settings == {"shuffle": True, "max_choices": 2}
 
 
 def test_short_text_format():

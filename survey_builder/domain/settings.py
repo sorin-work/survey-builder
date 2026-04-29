@@ -13,6 +13,7 @@ from .question_types import (
     NPS,
     RATING,
     SHORT_TEXT,
+    SINGLE_CHOICE,
 )
 
 TEXT_LIMITS = {SHORT_TEXT: 1000, LONG_TEXT: 10000}
@@ -76,7 +77,13 @@ def parse_settings(qtype: str, form) -> tuple[dict, dict[str, str]]:
             elif text_format:
                 settings["format"] = text_format
 
+    elif qtype == SINGLE_CHOICE:
+        if form.get("shuffle") in ("on", "1", True):
+            settings["shuffle"] = True
+
     elif qtype == MULTIPLE_CHOICE:
+        if form.get("shuffle") in ("on", "1", True):
+            settings["shuffle"] = True
         min_choices = _int_or_none(form.get("min_choices"), "min_choices", errors)
         max_choices = _int_or_none(form.get("max_choices"), "max_choices", errors)
         if min_choices is not None and max_choices is not None and min_choices > max_choices:

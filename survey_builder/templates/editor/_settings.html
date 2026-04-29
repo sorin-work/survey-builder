@@ -39,9 +39,15 @@
       {% endif %}
       {{ number("min_length", "Minimum length", s.min_length) }}
       {{ number("max_length", "Maximum length", s.max_length, min=1) }}
-    {% elif question.type == "multiple_choice" %}
+    {% elif question.type in ("single_choice", "multiple_choice") %}
+      <div class="setting">
+        <label class="inline"><input type="checkbox" name="shuffle" {% if s.shuffle %}checked{% endif %}>
+          Shuffle options for each respondent</label>
+      </div>
+      {% if question.type == "multiple_choice" %}
       {{ number("min_choices", "Pick at least", s.min_choices) }}
       {{ number("max_choices", "Pick at most", s.max_choices, min=1) }}
+      {% endif %}
     {% elif question.type == "rating" %}
       {{ number("scale", "Scale (3-10)", s.scale, min=3, max=10) }}
       {{ text("low_label", "Low label", s.low_label) }}
