@@ -28,7 +28,8 @@
     {% if page.title %}<h2>{{ page.title }}</h2>{% endif %}
     {% for question in page.questions %}
       {{ render_question(question, values.get(question.id, []), errors.get(question.id),
-                         survey.question_number(question)) }}
+                         survey.question_number(question),
+                         choice_order.get(question.id) if choice_order is defined else none) }}
     {% endfor %}
     <div class="form-nav">
       {% if can_go_back and not preview %}

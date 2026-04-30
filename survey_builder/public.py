@@ -6,6 +6,7 @@ response row itself is created when the first page is submitted, so people
 who only open the link do not show up as abandoned responses.
 """
 
+import random
 import secrets
 
 from flask import Blueprint, abort, redirect, render_template, request, session, url_for
@@ -97,9 +98,28 @@ def saved_values(response: Response | None, page: Page) -> dict[int, list[str]]:
     return values
 
 
+def choice_order(page: Page, seed: str) -> dict[int, list]:
+    """Per-question choice lists, shuffled where the question asks for it.
+
+    The order is stable for one respondent (same seed) so options do not jump
+    around when a page is shown again with validation errors or after Back.
+    """
+    orders = {}
+    for question in page.questions:
+        choices = list(question.choices)
+        if (question.settings or {}).get("shuffle"):
+            random.Random(f"{seed}:{question.id}").shuffle(choices)
+        orders[question.id] = choices
+    return orders
+
+
 def render_page(
     survey: Survey, page: Page, values=None, errors=None, status=200, can_go_back=False
 ):
+    state = load_state(survey)
+    if "seed" not in state:
+        state["seed"] = secrets.token_hex(8)
+        save_state(survey, state)
     html = render_template(
         "public/page.html",
         survey=survey,
@@ -108,6 +128,7 @@ def render_page(
         values=values or {},
         errors=errors or {},
         can_go_back=can_go_back,
+        choice_order=choice_order(page, state["seed"]),
     )
     return html, status
 

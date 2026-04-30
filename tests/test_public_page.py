@@ -133,3 +133,34 @@ def test_first_page_shows_estimate_and_required_hint(client, owner):
     html = client.get(f"/s/{survey.share_token}").get_data(as_text=True)
     assert "Takes about 2 minutes." in html
     assert "are required" in html
+
+
+def test_shuffled_choices_are_stable_for_a_respondent(client, owner, db):
+    import re
+
+    labels = [f"Option {i}" for i in range(12)]
+    survey = make_published_survey(
+        owner,
+        [[("single_choice", "Pick", {"choices": labels, "settings": {"shuffle": True}})]],
+        title="Shuffled",
+    )
+
+    def order(c):
+        html = c.get(f"/s/{survey.share_token}").get_data(as_text=True)
+        return re.findall(r"(Option \d+)\n", html)
+
+    first = order(client)
+    assert sorted(first) == sorted(labels)
+    assert order(client) == first
+    others = {tuple(order(client.application.test_client())) for _ in range(5)}
+    assert any(o != tuple(labels) for o in others | {tuple(first)})
+
+
+def test_unshuffled_choices_keep_their_order(client, owner):
+    import re
+
+    survey = make_published_survey(
+        owner, [[("single_choice", "Pick", {"choices": ["A1", "B2", "C3"]})]], title="Ordered"
+    )
+    html = client.get(f"/s/{survey.share_token}").get_data(as_text=True)
+    assert re.findall(r"([ABC]\d)\n", html) == ["A1", "B2", "C3"]

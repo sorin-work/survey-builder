@@ -1,4 +1,4 @@
-{% macro render_question(question, values, error, number=None) %}
+{% macro render_question(question, values, error, number=None, choices=None) %}
   {% set name = "q" ~ question.id %}
   {% set s = question.settings or {} %}
   <fieldset class="public-question{% if error %} has-error{% endif %}" id="{{ name }}">
@@ -27,7 +27,7 @@
     {% if question.type in ("single_choice", "multiple_choice") %}
       {% set input_type = "radio" if question.type == "single_choice" else "checkbox" %}
       <div class="options">
-        {% for choice in question.choices %}
+        {% for choice in (choices if choices is not none else question.choices) %}
           <label class="option">
             <input type="{{ input_type }}" name="{{ name }}" value="{{ choice.id }}"
                    {% if choice.id|string in values %}checked{% endif %}>
