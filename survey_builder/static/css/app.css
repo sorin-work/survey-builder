@@ -722,3 +722,63 @@ select.move-page {
   color: var(--muted);
   margin-right: 0.25rem;
 }
+
+/* Dark mode follows the operating system setting. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14171f;
+    --surface: #1c2029;
+    --text: #e6e8ee;
+    --muted: #9aa2b4;
+    --border: #2e3442;
+    --accent: #748ffc;
+    --accent-dark: #91a7ff;
+    --danger: #ff8787;
+    --success: #69db7c;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="date"],
+  input[type="search"],
+  textarea,
+  select {
+    background: #232835;
+    color: var(--text);
+  }
+
+  .question {
+    background: #20242e;
+  }
+
+  .flash {
+    background: #1f2a3d;
+  }
+
+  .flash-error {
+    background: #3b1f24;
+  }
+
+  .flash-success {
+    background: #1d3324;
+  }
+
+  .btn-secondary {
+    background: transparent;
+  }
+
+  .btn-secondary:hover {
+    background: #262c3a;
+  }
+
+  .preview-banner {
+    background: #3a3317;
+    border-color: #6b5b1a;
+  }
+
+  .badge {
+    background: #2b3140;
+  }
+}
