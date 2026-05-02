@@ -28,3 +28,8 @@ def test_security_headers(client):
     assert resp.headers["X-Content-Type-Options"] == "nosniff"
     assert resp.headers["X-Frame-Options"] == "DENY"
     assert resp.headers["Referrer-Policy"] == "same-origin"
+
+
+def test_static_assets_are_served(client):
+    for path in ("css/app.css", "img/favicon.svg", "vendor/htmx.min.js", "vendor/chart.umd.min.js"):
+        assert client.get(f"/static/{path}").status_code == 200
