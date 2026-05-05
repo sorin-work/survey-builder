@@ -176,3 +176,17 @@ def test_resubmitting_a_page_after_back_replaces_its_answers(client, owner, db):
             (nps.id, None, None),
         ]
     )
+
+
+def test_errors_are_linked_to_their_question_for_screen_readers(client, owner):
+    survey = make_published_survey(
+        owner,
+        [[("short_text", "Name", {"required": True, "help_text": "First name is fine"})]],
+        title="A11y",
+    )
+    question = survey.questions[0]
+    resp = client.post(f"/s/{survey.share_token}", data={"page_id": survey.pages[0].id})
+    html = resp.get_data(as_text=True)
+    assert 'aria-invalid="true"' in html
+    assert f'aria-describedby="q{question.id}-help q{question.id}-error"' in html
+    assert f'id="q{question.id}-error"' in html

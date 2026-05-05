@@ -1,13 +1,16 @@
 {% macro render_question(question, values, error, number=None, choices=None) %}
   {% set name = "q" ~ question.id %}
   {% set s = question.settings or {} %}
-  <fieldset class="public-question{% if error %} has-error{% endif %}" id="{{ name }}">
+  {% set described = (name ~ "-help " if question.help_text else "") ~ (name ~ "-error" if error else "") %}
+  <fieldset class="public-question{% if error %} has-error{% endif %}" id="{{ name }}"
+            {% if error %}aria-invalid="true"{% endif %}
+            {% if described.strip() %}aria-describedby="{{ described.strip() }}"{% endif %}>
     <legend>
       {% if number %}<span class="question-number">{{ number }}.</span>{% endif %}
       {{ question.prompt }}
       {% if question.required %}<span class="required" title="Required">*</span>{% endif %}
     </legend>
-    {% if question.help_text %}<p class="help muted">{{ question.help_text }}</p>{% endif %}
+    {% if question.help_text %}<p class="help muted" id="{{ name }}-help">{{ question.help_text }}</p>{% endif %}
 
     {% if question.type == "short_text" %}
       {% set input_type = {"email": "email", "number": "text"}.get(s.format, "text") %}
@@ -54,6 +57,6 @@
              aria-label="{{ question.prompt }}">
     {% endif %}
 
-    {% if error %}<div class="field-error" role="alert">{{ error }}</div>{% endif %}
+    {% if error %}<div class="field-error" id="{{ name }}-error" role="alert">{{ error }}</div>{% endif %}
   </fieldset>
 {% endmacro %}
