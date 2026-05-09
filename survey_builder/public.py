@@ -28,6 +28,14 @@ def get_survey_by_token(token: str) -> Survey:
     return survey
 
 
+def closed_page(survey: Survey):
+    """The "no longer accepting responses" page, or None while the survey is open."""
+    reason = sharing.closed_reason(survey)
+    if reason is None:
+        return None
+    return render_template("public/closed.html", survey=survey, reason=reason), 410
+
+
 def session_key(survey: Survey) -> str:
     return f"survey:{survey.share_token}"
 
@@ -136,9 +144,8 @@ def render_page(
 @bp.get("/<token>")
 def show(token: str):
     survey = get_survey_by_token(token)
-    reason = sharing.closed_reason(survey)
-    if reason:
-        return render_template("public/closed.html", survey=survey, reason=reason), 410
+    if closed := closed_page(survey):
+        return closed
     state = load_state(survey)
     if state.get("done"):
         return redirect(url_for("public.thanks", token=token))
@@ -150,9 +157,8 @@ def show(token: str):
 @bp.post("/<token>")
 def submit(token: str):
     survey = get_survey_by_token(token)
-    reason = sharing.closed_reason(survey)
-    if reason:
-        return render_template("public/closed.html", survey=survey, reason=reason), 410
+    if closed := closed_page(survey):
+        return closed
     state = load_state(survey)
     if state.get("done"):
         return redirect(url_for("public.thanks", token=token))
