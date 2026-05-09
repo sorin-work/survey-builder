@@ -50,3 +50,31 @@ def test_survey_stays_open_for_the_whole_close_date(owner, db):
     assert is_accepting_responses(survey, now=datetime(2026, 3, 10, 0, 0))
     assert is_accepting_responses(survey, now=datetime(2026, 3, 10, 23, 59, 59))
     assert closed_reason(survey, now=datetime(2026, 3, 11, 0, 0)) == "date"
+
+
+def test_limit_closes_the_survey_exactly_when_reached(owner, db):
+    survey = make_published_survey(owner)
+    survey.response_limit = 2
+    question = survey.questions[0]
+    add_response(survey, {question: "one"})
+    assert is_accepting_responses(survey)
+    add_response(survey, {question: "two"})
+    assert closed_reason(survey) == "limit"
+
+
+def test_no_response_beyond_the_limit_through_the_public_form(client, owner, db):
+    from survey_builder.models import Response
+
+    survey = make_published_survey(owner)
+    survey.response_limit = 1
+    db.session.commit()
+    page = survey.pages[0]
+    question = survey.questions[0]
+    first = client.application.test_client()
+    second = client.application.test_client()
+    first.post(f"/s/{survey.share_token}", data={"page_id": page.id, f"q{question.id}": "a"})
+    resp = second.post(
+        f"/s/{survey.share_token}", data={"page_id": page.id, f"q{question.id}": "b"}
+    )
+    assert resp.status_code == 410
+    assert db.session.query(Response).filter(Response.completed_at.is_not(None)).count() == 1

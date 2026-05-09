@@ -44,7 +44,7 @@ def closed_reason(survey, now: datetime | None = None) -> str | None:
     if survey.closes_on and now.date() > survey.closes_on:
         return REASON_DATE
     limit = survey.response_limit
-    if limit is not None and completed_response_count(survey) > limit:
+    if limit is not None and completed_response_count(survey) >= limit:
         return REASON_LIMIT
     return None
 
