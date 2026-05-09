@@ -9,7 +9,7 @@ from sqlalchemy.orm import selectinload
 
 from ..extensions import db
 from ..models import Answer, Response
-from .results import ALL_TIME, Period, completed_filter
+from .results import ALL_TIME, ResponseFilter, completed_filter
 
 MULTI_SEPARATOR = "; "
 
@@ -28,7 +28,7 @@ def _cell(question, answers: list[Answer]) -> str:
     return answer.text_value or ""
 
 
-def export_rows(survey, period: Period = ALL_TIME):
+def export_rows(survey, period: ResponseFilter = ALL_TIME):
     # Same order as respondents see them: page by page, top to bottom.
     questions = survey.questions
     yield ["response_id", "submitted_at", *(q.prompt for q in questions)]
@@ -50,7 +50,7 @@ def export_rows(survey, period: Period = ALL_TIME):
         ]
 
 
-def to_csv(survey, period: Period = ALL_TIME) -> str:
+def to_csv(survey, period: ResponseFilter = ALL_TIME) -> str:
     buffer = io.StringIO()
     writer = csv.writer(buffer)
     writer.writerows(export_rows(survey, period))

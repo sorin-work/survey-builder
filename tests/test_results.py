@@ -90,7 +90,7 @@ def test_empty_survey_summary(owner, db):
 def test_period_filter_is_inclusive_of_both_days(owner, db):
     from datetime import datetime
 
-    from survey_builder.domain.results import Period
+    from survey_builder.domain.results import ResponseFilter
 
     survey = build(owner)
     plan = survey.questions[0]
@@ -99,19 +99,19 @@ def test_period_filter_is_inclusive_of_both_days(owner, db):
     add_response(survey, {plan: "Team"}, when=datetime(2026, 2, 28, 23, 59))
     add_response(survey, {plan: "Team"}, when=datetime(2026, 3, 1, 0, 1))
 
-    february = Period(date(2026, 2, 1), date(2026, 2, 28))
+    february = ResponseFilter(date(2026, 2, 1), date(2026, 2, 28))
     assert completed_response_count(survey, february) == 2
     assert summarize(survey, february)[0].counts == [0, 1, 1]
-    assert completed_response_count(survey, Period(end=date(2026, 1, 31))) == 1
+    assert completed_response_count(survey, ResponseFilter(end=date(2026, 1, 31))) == 1
 
 
 def test_period_from_query_args_ignores_garbage():
-    from survey_builder.domain.results import Period
+    from survey_builder.domain.results import ResponseFilter
 
-    period = Period.from_args({"from": "2026-02-01", "to": "soon"})
-    assert period == Period(date(2026, 2, 1), None)
+    period = ResponseFilter.from_args({"from": "2026-02-01", "to": "soon"})
+    assert period == ResponseFilter(date(2026, 2, 1), None)
     assert period.as_args() == {"from": "2026-02-01"}
-    assert Period.from_args({}).is_open
+    assert ResponseFilter.from_args({}).is_open
 
 
 def test_daily_counts_fill_gaps(owner, db):

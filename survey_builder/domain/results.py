@@ -65,14 +65,15 @@ def nps_score(values) -> NpsScore:
 
 
 @dataclass(frozen=True)
-class Period:
-    """An inclusive range of submission dates (UTC). Either end may be open."""
+class ResponseFilter:
+    """Which completed responses to include: an inclusive range of submission
+    dates (UTC). Either end may be open."""
 
     start: date | None = None
     end: date | None = None
 
     @classmethod
-    def from_args(cls, args) -> "Period":
+    def from_args(cls, args) -> "ResponseFilter":
         def parse(raw):
             try:
                 return date.fromisoformat(raw) if raw else None
@@ -103,10 +104,10 @@ class Period:
         return args
 
 
-ALL_TIME = Period()
+ALL_TIME = ResponseFilter()
 
 
-def completed_filter(survey, period: Period = ALL_TIME) -> list:
+def completed_filter(survey, period: ResponseFilter = ALL_TIME) -> list:
     return [
         Response.survey_id == survey.id,
         Response.completed_at.is_not(None),
@@ -114,7 +115,7 @@ def completed_filter(survey, period: Period = ALL_TIME) -> list:
     ]
 
 
-def completed_response_count(survey, period: Period = ALL_TIME) -> int:
+def completed_response_count(survey, period: ResponseFilter = ALL_TIME) -> int:
     return db.session.scalar(
         select(db.func.count(Response.id)).where(*completed_filter(survey, period))
     )
@@ -133,7 +134,7 @@ class Funnel:
         return round(100 * self.completed / self.started)
 
 
-def funnel(survey, period: Period = ALL_TIME) -> Funnel:
+def funnel(survey, period: ResponseFilter = ALL_TIME) -> Funnel:
     """How many people started vs finished, and how long finishing took."""
     started_conditions = [Response.survey_id == survey.id]
     if period.start:
@@ -160,7 +161,7 @@ def funnel(survey, period: Period = ALL_TIME) -> Funnel:
     )
 
 
-def daily_counts(survey, period: Period = ALL_TIME) -> list[tuple[date, int]]:
+def daily_counts(survey, period: ResponseFilter = ALL_TIME) -> list[tuple[date, int]]:
     """Completed responses per day, including days without any, oldest first."""
     stamps = db.session.scalars(
         select(Response.completed_at).where(*completed_filter(survey, period))
@@ -178,7 +179,7 @@ def daily_counts(survey, period: Period = ALL_TIME) -> list[tuple[date, int]]:
     return days
 
 
-def _answers_by_question(survey, period: Period) -> dict[int, list[Answer]]:
+def _answers_by_question(survey, period: ResponseFilter) -> dict[int, list[Answer]]:
     rows = db.session.scalars(
         select(Answer)
         .join(Response)
@@ -226,7 +227,7 @@ def _summarize_dates(summary: QuestionSummary, answers: list[Answer]) -> None:
     summary.counts = [months[m] for m in summary.labels]
 
 
-def summarize(survey, period: Period = ALL_TIME) -> list[QuestionSummary]:
+def summarize(survey, period: ResponseFilter = ALL_TIME) -> list[QuestionSummary]:
     grouped = _answers_by_question(survey, period)
     summaries = []
     for question in survey.questions:

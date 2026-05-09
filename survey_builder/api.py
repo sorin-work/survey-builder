@@ -4,7 +4,7 @@ from flask import Blueprint, abort, jsonify, request
 from flask_login import current_user
 from sqlalchemy import select
 
-from .domain.results import Period, completed_response_count, funnel, summarize
+from .domain.results import ResponseFilter, completed_response_count, funnel, summarize
 from .extensions import csrf, db
 from .models import Survey
 
@@ -48,7 +48,7 @@ def summary(survey_id: int):
     survey = db.session.get(Survey, survey_id)
     if survey is None or survey.owner_id != current_user.id:
         abort(404)
-    period = Period.from_args(request.args)
+    period = ResponseFilter.from_args(request.args)
     stats = funnel(survey, period)
     questions = []
     for item in summarize(survey, period):

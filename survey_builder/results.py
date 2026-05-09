@@ -17,7 +17,13 @@ from sqlalchemy import select
 
 from .domain.export import to_csv
 from .domain.pagination import Pagination
-from .domain.results import Period, completed_response_count, daily_counts, funnel, summarize
+from .domain.results import (
+    ResponseFilter,
+    completed_response_count,
+    daily_counts,
+    funnel,
+    summarize,
+)
 from .extensions import db
 from .models import Answer, Question, Response
 from .surveys import get_owned_survey
@@ -42,7 +48,7 @@ def get_survey_response(survey, response_id: int) -> Response:
 @bp.get("/")
 def summary(survey_id: int):
     survey = get_owned_survey(survey_id)
-    period = Period.from_args(request.args)
+    period = ResponseFilter.from_args(request.args)
     return render_template(
         "results/summary.html",
         survey=survey,
@@ -114,7 +120,7 @@ def export_filename(survey) -> str:
 def export_csv(survey_id: int):
     survey = get_owned_survey(survey_id)
     return HttpResponse(
-        to_csv(survey, Period.from_args(request.args)),
+        to_csv(survey, ResponseFilter.from_args(request.args)),
         mimetype="text/csv",
         headers={"Content-Disposition": f'attachment; filename="{export_filename(survey)}"'},
     )
