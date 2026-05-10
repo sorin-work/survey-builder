@@ -67,10 +67,12 @@ def nps_score(values) -> NpsScore:
 @dataclass(frozen=True)
 class ResponseFilter:
     """Which completed responses to include: an inclusive range of submission
-    dates (UTC). Either end may be open."""
+    dates (UTC), either end open, and optionally only respondents who picked
+    a given choice (a "segment")."""
 
     start: date | None = None
     end: date | None = None
+    choice_id: int | None = None
 
     @classmethod
     def from_args(cls, args) -> "ResponseFilter":
@@ -80,11 +82,15 @@ class ResponseFilter:
             except ValueError:
                 return None
 
-        return cls(parse(args.get("from")), parse(args.get("to")))
+        try:
+            choice_id = int(args.get("choice")) if args.get("choice") else None
+        except ValueError:
+            choice_id = None
+        return cls(parse(args.get("from")), parse(args.get("to")), choice_id)
 
     @property
     def is_open(self) -> bool:
-        return self.start is None and self.end is None
+        return self.start is None and self.end is None and self.choice_id is None
 
     def conditions(self) -> list:
         conditions = []
@@ -93,6 +99,9 @@ class ResponseFilter:
         if self.end:
             next_day = datetime.combine(self.end + timedelta(days=1), time.min)
             conditions.append(Response.completed_at < next_day)
+        if self.choice_id:
+            picked = select(Answer.response_id).where(Answer.choice_id == self.choice_id)
+            conditions.append(Response.id.in_(picked))
         return conditions
 
     def as_args(self) -> dict[str, str]:
@@ -101,6 +110,8 @@ class ResponseFilter:
             args["from"] = self.start.isoformat()
         if self.end:
             args["to"] = self.end.isoformat()
+        if self.choice_id:
+            args["choice"] = str(self.choice_id)
         return args
 
 

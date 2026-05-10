@@ -161,3 +161,22 @@ def test_funnel_without_responses(owner, db):
 
     result = funnel(build(owner))
     assert result.completion_rate is None and result.median_seconds is None
+
+
+def test_segment_only_counts_respondents_who_picked_the_choice(owner, db):
+    from survey_builder.domain.results import ResponseFilter
+
+    survey = build(owner)
+    plan, uses, rating, *_ = survey.questions
+    free, pro, _ = plan.choices
+    add_response(survey, {plan: "Pro", rating: 5})
+    add_response(survey, {plan: "Pro", rating: 3})
+    add_response(survey, {plan: "Free", rating: 1})
+
+    pro_only = ResponseFilter(choice_id=pro.id)
+    assert completed_response_count(survey, pro_only) == 2
+    summaries = summarize(survey, pro_only)
+    assert summaries[2].average == 4.0
+    assert summaries[0].counts == [0, 2, 0]
+    assert ResponseFilter.from_args({"choice": str(free.id)}).choice_id == free.id
+    assert ResponseFilter.from_args({"choice": "x"}).choice_id is None
