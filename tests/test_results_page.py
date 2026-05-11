@@ -62,7 +62,7 @@ def test_results_page_filters_by_period(auth_client, owner):
     html = auth_client.get(f"/surveys/{survey.id}/results/?from=2026-02-01&to=2026-02-28").get_data(
         as_text=True
     )
-    assert "completed responses in this period" in html
+    assert "completed responses matching the filter" in html
     assert '"counts": [0, 1]' in html
 
 
@@ -100,3 +100,15 @@ def test_text_answers_page_is_owner_only(auth_client, owner):
     mine = make_published_survey(owner, title="Mine")
     url = f"/surveys/{mine.id}/results/questions/{comment.id}"
     assert auth_client.get(url).status_code == 404
+
+
+def test_results_page_segment_selector(auth_client, owner):
+    survey = build(owner)
+    plan, rating, *_ = survey.questions
+    free, pro = plan.choices
+    add_response(survey, {plan: "Free", rating: 2})
+    add_response(survey, {plan: "Pro", rating: 5})
+    html = auth_client.get(f"/surveys/{survey.id}/results/?choice={pro.id}").get_data(as_text=True)
+    assert f'<option value="{pro.id}" selected>Pro</option>' in html
+    assert "Average <strong>5.0</strong>" in html
+    assert f"export.csv?choice={pro.id}" in html

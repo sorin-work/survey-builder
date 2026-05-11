@@ -15,12 +15,26 @@
     <input type="date" id="from" name="from" value="{{ period.start.isoformat() if period.start else '' }}">
     <label for="to">to</label>
     <input type="date" id="to" name="to" value="{{ period.end.isoformat() if period.end else '' }}">
+    {% set choice_questions = survey.questions|selectattr("choices")|list %}
+    {% if choice_questions %}
+      <label for="choice">Respondents who answered</label>
+      <select id="choice" name="choice">
+        <option value="">anything</option>
+        {% for question in choice_questions %}
+          <optgroup label="{{ question.prompt|truncate(60) }}">
+            {% for choice in question.choices %}
+              <option value="{{ choice.id }}" {% if period.choice_id == choice.id %}selected{% endif %}>{{ choice.label }}</option>
+            {% endfor %}
+          </optgroup>
+        {% endfor %}
+      </select>
+    {% endif %}
     <button class="btn btn-secondary btn-small" type="submit">Apply</button>
-    {% if not period.is_open %}<a href="{{ url_for('results.summary', survey_id=survey.id) }}">All time</a>{% endif %}
+    {% if not period.is_open %}<a href="{{ url_for('results.summary', survey_id=survey.id) }}">Clear</a>{% endif %}
   </form>
 
   <section class="card stats">
-    <div class="stat"><span class="stat-value">{{ total }}</span><span class="muted">completed responses{% if not period.is_open %} in this period{% endif %}</span></div>
+    <div class="stat"><span class="stat-value">{{ total }}</span><span class="muted">completed responses{% if not period.is_open %} matching the filter{% endif %}</span></div>
     {% if funnel.completion_rate is not none %}
       <div class="stat"><span class="stat-value">{{ funnel.completion_rate }}%</span><span class="muted">completion rate ({{ funnel.started }} started)</span></div>
     {% endif %}
