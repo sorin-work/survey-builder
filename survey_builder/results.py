@@ -13,7 +13,7 @@ from flask import (
     Response as HttpResponse,
 )
 from flask_login import login_required
-from sqlalchemy import select
+from sqlalchemy import delete, select
 
 from .domain.export import to_csv
 from .domain.pagination import Pagination
@@ -157,3 +157,15 @@ def text_answers(survey_id: int, question_id: int):
         answers=answers,
         pagination=pagination,
     )
+
+
+@bp.post("/clear")
+def clear_responses(survey_id: int):
+    survey = get_owned_survey(survey_id)
+    if request.form.get("confirm", "").strip() != survey.title:
+        flash("Type the survey title exactly to delete all of its responses.", "error")
+        return redirect(url_for("surveys.edit", survey_id=survey.id))
+    removed = db.session.execute(delete(Response).where(Response.survey_id == survey.id))
+    db.session.commit()
+    flash(f"Deleted {removed.rowcount} responses.", "success")
+    return redirect(url_for("results.summary", survey_id=survey.id))

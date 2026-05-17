@@ -45,6 +45,18 @@
   </section>
   {% if survey %}
     <section class="card danger-zone">
+      <h2>Delete all responses</h2>
+      <p class="muted">Keeps the survey and its link, removes every response collected so far.
+        Type the survey title to confirm.</p>
+      <form method="post" action="{{ url_for('results.clear_responses', survey_id=survey.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="field">
+          <input type="text" name="confirm" placeholder="{{ survey.title }}" aria-label="Survey title">
+        </div>
+        <button class="btn btn-danger" type="submit">Delete all responses</button>
+      </form>
+    </section>
+    <section class="card danger-zone">
       <h2>Delete survey</h2>
       <p class="muted">This removes the survey, its questions and every response. It cannot be undone.</p>
       <form method="post" action="{{ url_for('surveys.delete', survey_id=survey.id) }}"

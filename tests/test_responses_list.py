@@ -121,3 +121,23 @@ def test_cannot_view_a_response_of_someone_elses_survey(auth_client, owner):
     resp = auth_client.get(f"/surveys/{mine.id}/results/responses/{secret.id}")
     assert resp.status_code == 404
     assert b"private answer" not in resp.data
+
+
+def test_clear_all_responses_needs_the_title(auth_client, owner, db):
+    from survey_builder.models import Response
+
+    survey = make_published_survey(owner)
+    for value in ("a", "b"):
+        add_response(survey, {survey.questions[0]: value})
+    url = f"/surveys/{survey.id}/results/clear"
+    auth_client.post(url, data={"confirm": "wrong"})
+    assert db.session.query(Response).count() == 2
+    resp = auth_client.post(url, data={"confirm": survey.title}, follow_redirects=True)
+    assert b"Deleted 2 responses." in resp.data
+    assert db.session.query(Response).count() == 0
+
+
+def test_cannot_clear_responses_of_foreign_survey(auth_client, db):
+    survey = make_published_survey(make_user("other@example.com"))
+    resp = auth_client.post(f"/surveys/{survey.id}/results/clear", data={"confirm": survey.title})
+    assert resp.status_code == 404
