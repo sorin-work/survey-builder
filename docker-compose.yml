@@ -22,6 +22,7 @@ services:
     environment:
       DATABASE_URL: postgresql://surveys:surveys@db:5432/surveys
       SECRET_KEY: ${SECRET_KEY:-local-development-secret-change-me}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
       # Creates demo@example.com / demo-password with sample surveys.
       SEED_DEMO: ${SEED_DEMO:-true}
     depends_on:

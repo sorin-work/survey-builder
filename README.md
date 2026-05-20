@@ -70,6 +70,7 @@ Without `DATABASE_URL` the app uses a local SQLite file.
 | `SEED_DEMO`      | `false` (`true` in compose) | Create the demo account on container start        |
 | `WEB_PORT`       | `4416`                      | Host port used by docker compose                  |
 | `WEB_CONCURRENCY`| `2`                         | Gunicorn workers in the container                 |
+| `LOG_LEVEL`      | `info`                      | Log level; every request is logged with its id    |
 
 ## API
 
