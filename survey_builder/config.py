@@ -22,6 +22,7 @@ def load_config() -> dict:
     secure_cookies = _flag("SECURE_COOKIES")
     return {
         "SECRET_KEY": os.environ.get("SECRET_KEY", "dev-secret-change-me"),
+        "LOG_LEVEL": os.environ.get("LOG_LEVEL", "INFO").upper(),
         "SQLALCHEMY_DATABASE_URI": _database_url(),
         "SQLALCHEMY_ENGINE_OPTIONS": {"pool_pre_ping": True},
         "SESSION_COOKIE_HTTPONLY": True,

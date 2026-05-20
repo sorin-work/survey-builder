@@ -50,7 +50,9 @@ def create_app(config: dict | None = None) -> Flask:
 
     from .cli import register_cli
     from .errors import register_error_pages
+    from .logging import configure_logging
 
+    configure_logging(app)
     register_cli(app)
     register_error_pages(app)
 
