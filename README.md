@@ -83,6 +83,9 @@ pytest
 ruff check . && ruff format --check .
 ```
 
+The `Makefile` wraps the usual commands: `make install`, `make dev`, `make check`,
+`make format`, `make up`.
+
 ## License
 
 MIT
