@@ -112,3 +112,17 @@ def test_results_page_segment_selector(auth_client, owner):
     assert f'<option value="{pro.id}" selected>Pro</option>' in html
     assert "Average <strong>5.0</strong>" in html
     assert f"export.csv?choice={pro.id}" in html
+
+
+def test_text_answers_cannot_inject_html(auth_client, owner):
+    survey = build(owner)
+    comment = survey.questions[2]
+    response = add_response(survey, {comment: "<script>alert('pwned')</script>\nhi"})
+    for url in (
+        f"/surveys/{survey.id}/results/",
+        f"/surveys/{survey.id}/results/questions/{comment.id}",
+        f"/surveys/{survey.id}/results/responses/{response.id}",
+    ):
+        html = auth_client.get(url).get_data(as_text=True)
+        assert "<script>alert" not in html
+        assert "&lt;script&gt;alert" in html

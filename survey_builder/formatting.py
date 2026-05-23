@@ -1,6 +1,6 @@
 """Small formatting helpers used as Jinja filters."""
 
-from markupsafe import Markup
+from markupsafe import Markup, escape
 
 
 def duration(seconds: int | float | None) -> str:
@@ -22,4 +22,5 @@ def nl2br(text: str | None) -> Markup:
     if not text:
         return Markup("")
     lines = text.replace("\r\n", "\n").split("\n")
-    return Markup("<br>".join(lines))
+    # Respondent text is untrusted: escape every line, only the <br> is markup.
+    return Markup("<br>").join(escape(line) for line in lines)

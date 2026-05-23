@@ -16,3 +16,12 @@ def test_nl2br_keeps_line_breaks():
 
     assert str(nl2br("one\ntwo\r\nthree")) == "one<br>two<br>three"
     assert str(nl2br(None)) == ""
+
+
+def test_nl2br_escapes_html():
+    from survey_builder.formatting import nl2br
+
+    html = str(nl2br('<img src=x onerror="alert(1)">\n<b>bold</b> & co'))
+    assert (
+        html == "&lt;img src=x onerror=&#34;alert(1)&#34;&gt;<br>&lt;b&gt;bold&lt;/b&gt; &amp; co"
+    )
