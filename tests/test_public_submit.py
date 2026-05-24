@@ -190,3 +190,11 @@ def test_errors_are_linked_to_their_question_for_screen_readers(client, owner):
     assert 'aria-invalid="true"' in html
     assert f'aria-describedby="q{question.id}-help q{question.id}-error"' in html
     assert f'id="q{question.id}-error"' in html
+
+
+def test_progress_cookie_outlives_the_browser_session(client, owner):
+    survey = two_page_survey(owner)
+    page1, _, name, *_ = ids(survey)
+    resp = client.post(f"/s/{survey.share_token}", data={"page_id": page1.id, f"q{name.id}": "Ana"})
+    cookie = resp.headers["Set-Cookie"]
+    assert "Expires=" in cookie

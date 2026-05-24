@@ -45,6 +45,8 @@ def load_state(survey: Survey) -> dict:
 
 
 def save_state(survey: Survey, state: dict) -> None:
+    # Keep the cookie across browser restarts so people can finish later.
+    session.permanent = True
     session[session_key(survey)] = state
 
 
