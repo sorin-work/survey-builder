@@ -21,3 +21,24 @@ def test_nps_template_starts_with_nps(owner, db):
     survey = build_from_template(TEMPLATES["nps"], owner.id)
     assert survey.questions[0].type == "nps"
     assert survey.questions[0].required
+
+
+def test_new_survey_page_lists_templates(auth_client):
+    html = auth_client.get("/surveys/new").get_data(as_text=True)
+    assert "Or start from a template" in html
+    assert all(t.title in html for t in TEMPLATES.values())
+
+
+def test_create_from_template(auth_client, owner, db):
+    from survey_builder.models import Survey
+
+    resp = auth_client.post("/surveys/new/from-template", data={"template": "event"})
+    assert resp.status_code == 302
+    survey = db.session.query(Survey).one()
+    assert survey.owner_id == owner.id
+    assert survey.title == "Event feedback"
+    assert len(survey.pages) == 2
+
+
+def test_unknown_template(auth_client, db):
+    assert auth_client.post("/surveys/new/from-template", data={"template": "x"}).status_code == 400

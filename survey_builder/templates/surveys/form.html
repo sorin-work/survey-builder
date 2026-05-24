@@ -43,6 +43,23 @@
       <a class="btn btn-secondary" href="{{ url_for('surveys.dashboard') }}">Cancel</a>
     </form>
   </section>
+  {% if not survey and templates %}
+    <section class="card">
+      <h2>Or start from a template</h2>
+      <div class="template-grid">
+        {% for template in templates.values() %}
+          <form method="post" action="{{ url_for('surveys.create_from_template') }}" class="template">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="template" value="{{ template.key }}">
+            <strong>{{ template.title }}</strong>
+            <p class="muted small">{{ template.description }}</p>
+            <p class="muted small">{{ template.question_count }} questions</p>
+            <button class="btn btn-secondary btn-small" type="submit">Use this template</button>
+          </form>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
   {% if survey %}
     <section class="card danger-zone">
       <h2>Delete all responses</h2>

@@ -6,6 +6,7 @@ from sqlalchemy import select
 
 from .domain import sharing
 from .domain.copying import copy_survey
+from .domain.templates import TEMPLATES, build_from_template
 from .extensions import db
 from .models import Page, Response, Survey, utcnow
 
@@ -121,7 +122,21 @@ def create():
             flash("Survey created. Add your first questions below.", "success")
             return redirect(url_for("editor.edit", survey_id=survey.id))
     status = 422 if errors else 200
-    return render_template("surveys/form.html", form=form, errors=errors, survey=None), status
+    return render_template(
+        "surveys/form.html", form=form, errors=errors, survey=None, templates=TEMPLATES
+    ), status
+
+
+@bp.post("/new/from-template")
+def create_from_template():
+    template = TEMPLATES.get(request.form.get("template", ""))
+    if template is None:
+        abort(400)
+    survey = build_from_template(template, current_user.id)
+    db.session.add(survey)
+    db.session.commit()
+    flash(f"Started from the \u201c{template.title}\u201d template.", "success")
+    return redirect(url_for("editor.edit", survey_id=survey.id))
 
 
 @bp.route("/<int:survey_id>/settings", methods=["GET", "POST"])
