@@ -12,6 +12,14 @@ from ..models import Answer, Response
 from .results import ALL_TIME, ResponseFilter, completed_filter
 
 MULTI_SEPARATOR = "; "
+# Spreadsheets run cells starting with these as formulas (CSV injection).
+FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
+
+
+def safe_cell(value: str) -> str:
+    if value and value.startswith(FORMULA_PREFIXES):
+        return "'" + value
+    return value
 
 
 def _cell(question, answers: list[Answer]) -> str:
@@ -19,19 +27,19 @@ def _cell(question, answers: list[Answer]) -> str:
         return ""
     if question.type in ("single_choice", "multiple_choice"):
         labels = {c.id: c.label for c in question.choices}
-        return MULTI_SEPARATOR.join(labels.get(a.choice_id, "") for a in answers)
+        return safe_cell(MULTI_SEPARATOR.join(labels.get(a.choice_id, "") for a in answers))
     answer = answers[0]
     if answer.number_value is not None:
         return str(answer.number_value)
     if answer.date_value is not None:
         return answer.date_value.isoformat()
-    return answer.text_value or ""
+    return safe_cell(answer.text_value or "")
 
 
 def export_rows(survey, period: ResponseFilter = ALL_TIME):
     # Same order as respondents see them: page by page, top to bottom.
     questions = survey.questions
-    yield ["response_id", "submitted_at", *(q.prompt for q in questions)]
+    yield ["response_id", "submitted_at", *(safe_cell(q.prompt) for q in questions)]
 
     responses = db.session.scalars(
         select(Response)

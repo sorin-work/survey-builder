@@ -93,3 +93,26 @@ def test_columns_follow_the_survey_order_after_moving_questions(auth_client, own
     assert header[2:] == [q.prompt for q in survey.questions]
     assert header[2:] == ["Pets", "Visited", "Recommend", "Name"]
     assert row[2:] == ["Dog", "2026-03-01", "7", "Ana"]
+
+
+def test_formula_like_answers_are_neutralised(owner, db):
+    survey = make_published_survey(
+        owner,
+        [[("short_text", "=Prompt", {}), ("single_choice", "Pick", {"choices": ["@SUM(A1)"]})]],
+        title="Injection",
+    )
+    text, pick = survey.questions
+    add_response(survey, {text: '=HYPERLINK("http://evil.example","click")', pick: "@SUM(A1)"})
+    add_response(survey, {text: "-2+3"})
+    add_response(survey, {text: "plain text - with dash"})
+    header, *rows = list(export_rows(survey))
+    assert header[2] == "'=Prompt"
+    assert rows[0][2:] == ['\'=HYPERLINK("http://evil.example","click")', "'@SUM(A1)"]
+    assert rows[1][2] == "'-2+3"
+    assert rows[2][2] == "plain text - with dash"
+
+
+def test_numbers_are_not_prefixed(owner, db):
+    survey = make_published_survey(owner, [[("nps", "Score", {})]], title="Numbers")
+    add_response(survey, {survey.questions[0]: 0})
+    assert list(export_rows(survey))[1][2] == "0"
