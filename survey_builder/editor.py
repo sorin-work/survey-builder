@@ -11,9 +11,9 @@ from flask_login import login_required
 from .domain import sharing
 from .domain.answers import parse_page
 from .domain.branching import prune_invalid_rules, valid_targets
+from .domain.question_form import PROMPT_MAX, parse_question_form
 from .domain.question_types import default_settings, get_type
 from .domain.results import completed_response_count
-from .domain.settings import parse_settings
 from .extensions import db
 from .models import BranchRule, Choice, Page, Question, Survey
 from .surveys import get_owned_survey
@@ -157,11 +157,6 @@ def add_question(survey_id: int, page_id: int):
     return back_to_editor(survey, f"question-{question.id}")
 
 
-PROMPT_MAX = 500
-HELP_MAX = 500
-CHOICE_MAX = 300
-
-
 def render_question(survey: Survey, question: Question, errors=None, status=200):
     html = render_template(
         "editor/_question.html", survey=survey, question=question, errors=errors or {}
@@ -173,31 +168,7 @@ def render_question(survey: Survey, question: Question, errors=None, status=200)
 def update_question(survey_id: int, question_id: int):
     survey = get_owned_survey(survey_id)
     question = get_question(survey, question_id)
-    prompt = request.form.get("prompt", "").strip()
-    help_text = request.form.get("help_text", "").strip()
-    errors = {}
-    if not prompt:
-        errors["prompt"] = "The question needs some text."
-    elif len(prompt) > PROMPT_MAX:
-        errors["prompt"] = f"Keep the question under {PROMPT_MAX} characters."
-    if len(help_text) > HELP_MAX:
-        errors["help_text"] = f"Keep the help text under {HELP_MAX} characters."
-    settings, setting_errors = parse_settings(question.type, request.form)
-    errors.update(setting_errors)
-    labels = {}
-    for choice in question.choices:
-        label = request.form.get(f"choice_{choice.id}")
-        if label is None:
-            continue
-        label = label.strip()
-        if not label:
-            errors["choices"] = "Options cannot be empty."
-        elif len(label) > CHOICE_MAX:
-            errors["choices"] = f"Keep options under {CHOICE_MAX} characters."
-        labels[choice] = label
-    if "choices" not in errors and len(set(labels.values())) < len(labels):
-        errors["choices"] = "Each option must be different."
-
+    changes, errors = parse_question_form(question, request.form)
     if errors:
         db.session.rollback()
         if is_htmx():
@@ -205,12 +176,7 @@ def update_question(survey_id: int, question_id: int):
         flash(next(iter(errors.values())), "error")
         return back_to_editor(survey, f"question-{question.id}")
 
-    question.prompt = prompt
-    question.help_text = help_text
-    question.required = request.form.get("required") == "on"
-    question.settings = settings
-    for choice, label in labels.items():
-        choice.label = label
+    changes.apply(question)
     db.session.commit()
     if is_htmx():
         return render_question(survey, question)
