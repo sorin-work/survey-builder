@@ -93,6 +93,8 @@ def rename_page(survey_id: int, page_id: int):
     survey = get_owned_survey(survey_id)
     page = get_page(survey, page_id)
     page.title = request.form.get("title", "").strip()[:200]
+    if "description" in request.form:
+        page.description = request.form.get("description", "").strip()[:2000]
     db.session.commit()
     if is_htmx():
         return render_template("editor/_page_title.html", survey=survey, page=page)

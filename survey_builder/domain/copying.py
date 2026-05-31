@@ -16,7 +16,7 @@ def copy_survey(survey: Survey, title: str | None = None) -> Survey:
     choices: dict[int, Choice] = {}
     questions: list[tuple[Question, Question]] = []
     for page in survey.pages:
-        new_page = Page(title=page.title, position=page.position)
+        new_page = Page(title=page.title, description=page.description, position=page.position)
         pages[page.id] = new_page
         for question in page.questions:
             new_question = Question(

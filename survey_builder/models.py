@@ -80,6 +80,7 @@ class Page(db.Model):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     survey_id: Mapped[int] = mapped_column(ForeignKey("surveys.id", ondelete="CASCADE"), index=True)
     title: Mapped[str] = mapped_column(String(200), default="")
+    description: Mapped[str] = mapped_column(Text, default="", server_default="")
     position: Mapped[int] = mapped_column(Integer, default=0)
 
     survey: Mapped[Survey] = relationship(back_populates="pages")

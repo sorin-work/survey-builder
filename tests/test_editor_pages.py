@@ -94,3 +94,19 @@ def test_move_page_rejects_bad_direction(auth_client, owner):
     page = survey.pages[0]
     resp = auth_client.post(f"/surveys/{survey.id}/pages/{page.id}/move", data={"direction": "x"})
     assert resp.status_code == 400
+
+
+def test_page_description_is_saved_and_shown_to_respondents(auth_client, client, owner, db):
+    from factories import make_published_survey
+
+    survey = make_published_survey(owner)
+    page = survey.pages[0]
+    auth_client.post(
+        f"/surveys/{survey.id}/pages/{page.id}",
+        data={"title": "About you", "description": "Takes a minute."},
+        headers=HX,
+    )
+    db.session.refresh(page)
+    assert page.description == "Takes a minute."
+    html = client.application.test_client().get(f"/s/{survey.share_token}").get_data(as_text=True)
+    assert "Takes a minute." in html
