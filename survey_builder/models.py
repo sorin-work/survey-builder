@@ -51,6 +51,8 @@ class Survey(db.Model):
     published_at: Mapped[datetime | None] = mapped_column(DateTime)
     closes_on: Mapped[date | None] = mapped_column(Date)
     response_limit: Mapped[int | None] = mapped_column(Integer)
+    # Kiosk mode: let the same browser submit several responses.
+    allow_multiple: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
 

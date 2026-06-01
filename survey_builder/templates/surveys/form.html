@@ -37,6 +37,12 @@
               {% if errors.response_limit %}<div class="field-error">{{ errors.response_limit }}</div>{% endif %}
             </div>
           </div>
+          <div class="field">
+            <label class="inline">
+              <input type="checkbox" name="allow_multiple" {% if form.allow_multiple %}checked{% endif %}>
+              Allow several responses from the same device (kiosk mode)
+            </label>
+          </div>
         </fieldset>
       {% endif %}
       <button class="btn" type="submit">{{ "Save" if survey else "Create survey" }}</button>

@@ -11,6 +11,7 @@ def copy_survey(survey: Survey, title: str | None = None) -> Survey:
         title=(title or f"Copy of {survey.title}")[:200],
         description=survey.description,
         thank_you_message=survey.thank_you_message,
+        allow_multiple=survey.allow_multiple,
     )
     pages: dict[int, Page] = {}
     choices: dict[int, Choice] = {}

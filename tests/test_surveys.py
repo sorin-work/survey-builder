@@ -172,3 +172,14 @@ def test_dashboard_search_treats_wildcards_literally(auth_client, owner):
     assert "100% satisfaction" in html and "Plain" not in html
     html = auth_client.get("/surveys/?q=_").get_data(as_text=True)
     assert "Q1_review" in html and "Plain" not in html
+
+
+def test_toggle_kiosk_mode(auth_client, owner, db):
+    survey = make_survey(owner)
+    url = f"/surveys/{survey.id}/settings"
+    auth_client.post(url, data={"title": "T", "allow_multiple": "on"})
+    db.session.refresh(survey)
+    assert survey.allow_multiple is True
+    auth_client.post(url, data={"title": "T"})
+    db.session.refresh(survey)
+    assert survey.allow_multiple is False

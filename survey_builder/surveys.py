@@ -148,6 +148,7 @@ def edit(survey_id: int):
         "thank_you_message": survey.thank_you_message,
         "closes_on": survey.closes_on.isoformat() if survey.closes_on else "",
         "response_limit": survey.response_limit or "",
+        "allow_multiple": survey.allow_multiple,
     }
     errors: dict[str, str] = {}
     if request.method == "POST":
@@ -157,6 +158,7 @@ def edit(survey_id: int):
             "thank_you_message": request.form.get("thank_you_message", "").strip(),
             "closes_on": request.form.get("closes_on", "").strip(),
             "response_limit": request.form.get("response_limit", "").strip(),
+            "allow_multiple": request.form.get("allow_multiple") == "on",
         }
         errors = validate_survey_form(form["title"], form["thank_you_message"])
         share, share_errors = parse_share_settings(request.form)
@@ -164,6 +166,7 @@ def edit(survey_id: int):
         if not errors:
             survey.closes_on = share["closes_on"]
             survey.response_limit = share["response_limit"]
+            survey.allow_multiple = form["allow_multiple"]
             survey.title = form["title"]
             survey.description = form["description"]
             survey.thank_you_message = form["thank_you_message"]
