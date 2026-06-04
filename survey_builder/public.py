@@ -211,6 +211,16 @@ def back(token: str):
     return redirect(url_for("public.show", token=token))
 
 
+@bp.post("/<token>/again")
+def again(token: str):
+    """Kiosk mode: forget the finished response so the next person can start."""
+    survey = get_survey_by_token(token)
+    if not survey.allow_multiple:
+        abort(404)
+    session.pop(session_key(survey), None)
+    return redirect(url_for("public.show", token=token))
+
+
 @bp.get("/<token>/thanks")
 def thanks(token: str):
     survey = get_survey_by_token(token)

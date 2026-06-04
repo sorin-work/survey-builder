@@ -198,3 +198,23 @@ def test_progress_cookie_outlives_the_browser_session(client, owner):
     resp = client.post(f"/s/{survey.share_token}", data={"page_id": page1.id, f"q{name.id}": "Ana"})
     cookie = resp.headers["Set-Cookie"]
     assert "Expires=" in cookie
+
+
+def test_kiosk_mode_allows_another_response(client, owner, db):
+    survey = make_published_survey(owner, title="Kiosk")
+    survey.allow_multiple = True
+    db.session.commit()
+    page = survey.pages[0]
+    question = survey.questions[0]
+    url = f"/s/{survey.share_token}"
+    client.post(url, data={"page_id": page.id, f"q{question.id}": "first"})
+    assert b"Start another response" in client.get(f"{url}/thanks").data
+    client.post(f"{url}/again")
+    client.post(url, data={"page_id": page.id, f"q{question.id}": "second"})
+    assert db.session.query(Response).filter(Response.completed_at.is_not(None)).count() == 2
+
+
+def test_again_is_not_available_without_kiosk_mode(client, owner):
+    survey = make_published_survey(owner, title="Normal")
+    assert client.post(f"/s/{survey.share_token}/again").status_code == 404
+    assert b"Start another response" not in client.get(f"/s/{survey.share_token}/thanks").data

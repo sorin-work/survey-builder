@@ -7,5 +7,11 @@
     {% else %}
       <p>Your answers to <strong>{{ survey.title }}</strong> have been recorded.</p>
     {% endif %}
+    {% if survey.allow_multiple and survey.status == "published" %}
+      <form method="post" action="{{ url_for('public.again', token=survey.share_token) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn" type="submit">Start another response</button>
+      </form>
+    {% endif %}
   </section>
 {% endblock %}
