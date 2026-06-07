@@ -1,9 +1,10 @@
 import re
 
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 from sqlalchemy import select
 
+from .domain.throttle import LoginThrottle
 from .extensions import db, login_manager
 from .models import User
 
@@ -64,6 +65,14 @@ def register():
     return render_template("auth/register.html", form=form, errors=errors), status
 
 
+def get_throttle() -> LoginThrottle:
+    if "login_throttle" not in current_app.extensions:
+        current_app.extensions["login_throttle"] = LoginThrottle(
+            max_failures=current_app.config.get("LOGIN_MAX_FAILURES", 5)
+        )
+    return current_app.extensions["login_throttle"]
+
+
 def is_safe_next(target: str | None) -> bool:
     return bool(target) and target.startswith("/") and not target.startswith("//")
 
@@ -78,10 +87,18 @@ def login():
     if request.method == "POST":
         email = normalize_email(request.form.get("email", ""))
         password = request.form.get("password", "")
+        throttle = get_throttle()
+        key = f"{email}|{request.remote_addr}"
+        if throttle.is_blocked(key):
+            minutes = max(1, round(throttle.retry_after(key) / 60))
+            error = f"Too many failed attempts. Try again in {minutes} minute(s)."
+            return render_template("auth/login.html", email=email, error=error), 429
         user = db.session.scalar(select(User).filter_by(email=email))
         if user is None or not user.check_password(password):
+            throttle.record_failure(key)
             error = "Email or password is incorrect."
         else:
+            throttle.reset(key)
             login_user(user, remember=bool(request.form.get("remember")))
             target = request.args.get("next")
             return redirect(target if is_safe_next(target) else url_for("index"))

@@ -70,3 +70,33 @@ def test_login_redirects_to_safe_next_only(client):
 def test_logout_requires_post(client):
     register(client)
     assert client.get("/logout").status_code == 405
+
+
+def test_repeated_failed_logins_are_throttled(client):
+    register(client)
+    client.post("/logout")
+    for _ in range(5):
+        resp = client.post("/login", data={"email": "ana@example.com", "password": "nope"})
+        assert resp.status_code == 401
+    resp = client.post("/login", data={"email": "ana@example.com", "password": "s3cret-pass"})
+    assert resp.status_code == 429
+    assert b"Too many failed attempts" in resp.data
+
+
+def test_successful_login_resets_the_counter(client):
+    register(client)
+    client.post("/logout")
+    for _ in range(4):
+        client.post("/login", data={"email": "ana@example.com", "password": "nope"})
+    assert (
+        client.post(
+            "/login", data={"email": "ana@example.com", "password": "s3cret-pass"}
+        ).status_code
+        == 302
+    )
+    client.post("/logout")
+    for _ in range(4):
+        assert (
+            client.post("/login", data={"email": "ana@example.com", "password": "x"}).status_code
+            == 401
+        )
