@@ -64,6 +64,7 @@ def summary(survey_id: int):
             entry["counts"] = item.counts
         if item.average is not None:
             entry["average"] = item.average
+            entry["median"] = item.median
         if item.nps is not None:
             entry["nps"] = {
                 "score": item.nps.score,

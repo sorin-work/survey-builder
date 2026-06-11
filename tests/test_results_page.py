@@ -32,6 +32,7 @@ def test_results_show_counts_and_texts(auth_client, owner):
     assert "Love the export" in html
     assert "100.0%" in html
     assert "Average <strong>4.5</strong>" in html
+    assert "median <strong>4.5</strong>" in html
 
 
 def test_results_are_owner_only(auth_client, db):

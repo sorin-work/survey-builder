@@ -90,7 +90,8 @@
             </div>
           {% endif %}
           {% if summary.average is not none and question.type != "nps" %}
-            <p class="average">Average <strong>{{ summary.average }}</strong></p>
+            <p class="average">Average <strong>{{ summary.average }}</strong>,
+              median <strong>{{ summary.median|round(1) }}</strong></p>
           {% endif %}
           <table class="result-table">
             <thead><tr><th>Answer</th><th class="num">Count</th><th class="num">Share</th></tr></thead>

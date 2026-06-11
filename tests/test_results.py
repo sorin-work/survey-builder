@@ -180,3 +180,14 @@ def test_segment_only_counts_respondents_who_picked_the_choice(owner, db):
     assert summaries[0].counts == [0, 2, 0]
     assert ResponseFilter.from_args({"choice": str(free.id)}).choice_id == free.id
     assert ResponseFilter.from_args({"choice": "x"}).choice_id is None
+
+
+def test_rating_median(owner, db):
+    survey = build(owner)
+    rating = survey.questions[2]
+    for value in (1, 2, 5, 5):
+        add_response(survey, {rating: value})
+    summary = summarize(survey)[2]
+    assert summary.median == 3.5
+    add_response(survey, {rating: 4})
+    assert summarize(survey)[2].median == 4.0

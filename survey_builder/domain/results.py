@@ -1,5 +1,6 @@
 """Aggregating completed responses into per-question summaries."""
 
+import statistics
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from datetime import date, datetime, time, timedelta
@@ -22,6 +23,7 @@ class QuestionSummary:
     labels: list[str] = field(default_factory=list)
     counts: list[int] = field(default_factory=list)
     average: float | None = None
+    median: float | None = None
     texts: list[str] = field(default_factory=list)
     earliest: object = None
     latest: object = None
@@ -219,6 +221,7 @@ def _summarize_scale(summary: QuestionSummary, answers: list[Answer], low: int, 
     summary.counts = [counts.get(n, 0) for n in range(low, high + 1)]
     if values:
         summary.average = round(sum(values) / len(values), 1)
+        summary.median = float(statistics.median(values))
 
 
 def _summarize_text(summary: QuestionSummary, answers: list[Answer]) -> None:
