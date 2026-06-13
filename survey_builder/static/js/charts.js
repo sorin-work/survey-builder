@@ -25,7 +25,13 @@
       options: {
         maintainAspectRatio: false,
         plugins: { legend: { display: isPie, position: "right" } },
-        scales: isPie ? {} : { y: { beginAtZero: true, ticks: { precision: 0 } } },
+        scales: isPie
+          ? {}
+          : {
+              y: spec.signed
+                ? { min: -100, max: 100, ticks: { stepSize: 50 } }
+                : { beginAtZero: true, ticks: { precision: 0 } },
+            },
       },
     });
   }

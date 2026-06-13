@@ -72,3 +72,15 @@ def test_nps_by_month(owner, db):
         add_response(survey, {question: value}, when=when)
     trend = nps_by_month(survey, question)
     assert [(month, score.score) for month, score in trend] == [("2026-04", 0), ("2026-05", 100)]
+
+
+def test_results_page_shows_nps_trend(auth_client, owner):
+    from datetime import datetime
+
+    survey = make_published_survey(owner, [[("nps", "Recommend us?", {})]], title="Trend page")
+    question = survey.questions[0]
+    add_response(survey, {question: 10}, when=datetime(2026, 4, 3))
+    add_response(survey, {question: 0}, when=datetime(2026, 5, 3))
+    html = auth_client.get(f"/surveys/{survey.id}/results/").get_data(as_text=True)
+    assert "NPS by month" in html
+    assert '"counts": [100, -100]' in html

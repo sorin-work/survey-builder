@@ -88,6 +88,16 @@
                 <span class="nps-detractors">Detractors {{ summary.nps.detractors }}</span>
               </div>
             </div>
+            {% set trend = nps_trends.get(question.id, []) %}
+            {% if trend|length > 1 %}
+              <h3 class="muted small">NPS by month</h3>
+              <div class="chart-wrap chart-small">
+                <canvas data-chart='{{ {"kind": "line", "labels": trend|map("first")|list,
+                                        "counts": trend|map("last")|map(attribute="score")|list,
+                                        "signed": true}|tojson }}'
+                        aria-label="NPS by month" role="img"></canvas>
+              </div>
+            {% endif %}
           {% endif %}
           {% if summary.average is not none and question.type != "nps" %}
             <p class="average">Average <strong>{{ summary.average }}</strong>,

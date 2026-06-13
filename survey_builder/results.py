@@ -22,6 +22,7 @@ from .domain.results import (
     completed_response_count,
     daily_counts,
     funnel,
+    nps_by_month,
     summarize,
 )
 from .extensions import db
@@ -57,6 +58,9 @@ def summary(survey_id: int):
         summaries=summarize(survey, period),
         timeline=daily_counts(survey, period),
         funnel=funnel(survey, period),
+        nps_trends={
+            q.id: nps_by_month(survey, q, period) for q in survey.questions if q.type == "nps"
+        },
     )
 
 

@@ -809,3 +809,7 @@ select.move-page {
   white-space: pre-line;
   margin-top: -0.25rem;
 }
+
+.chart-small {
+  height: 160px;
+}
