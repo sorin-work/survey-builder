@@ -110,3 +110,22 @@ def test_page_description_is_saved_and_shown_to_respondents(auth_client, client,
     assert page.description == "Takes a minute."
     html = client.application.test_client().get(f"/s/{survey.share_token}").get_data(as_text=True)
     assert "Takes a minute." in html
+
+
+def test_editor_query_count_does_not_grow_with_questions(auth_client, owner, db, count_queries):
+    from survey_builder.models import Choice, Question
+
+    survey = make_survey(owner)
+    for page_index in range(3):
+        page = survey.pages[0] if page_index == 0 else Page(position=page_index)
+        if page_index:
+            survey.pages.append(page)
+        for i in range(5):
+            question = Question(type="single_choice", prompt=f"Q{page_index}.{i}", position=i)
+            question.choices = [Choice(label=f"c{n}", position=n) for n in range(3)]
+            page.questions.append(question)
+    db.session.commit()
+    db.session.expire_all()
+    with count_queries() as statements:
+        assert auth_client.get(f"/surveys/{survey.id}/edit").status_code == 200
+    assert len(statements) < 15

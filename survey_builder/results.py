@@ -48,7 +48,7 @@ def get_survey_response(survey, response_id: int) -> Response:
 
 @bp.get("/")
 def summary(survey_id: int):
-    survey = get_owned_survey(survey_id)
+    survey = get_owned_survey(survey_id, with_tree=True)
     period = ResponseFilter.from_args(request.args)
     return render_template(
         "results/summary.html",

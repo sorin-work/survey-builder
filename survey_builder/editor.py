@@ -68,7 +68,7 @@ def renumber(items) -> None:
 
 @bp.get("/edit")
 def edit(survey_id: int):
-    survey = get_owned_survey(survey_id)
+    survey = get_owned_survey(survey_id, with_tree=True)
     return render_template(
         "editor/edit.html",
         survey=survey,

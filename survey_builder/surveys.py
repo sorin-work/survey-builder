@@ -3,12 +3,13 @@ from datetime import date
 from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from .domain import sharing
 from .domain.copying import copy_survey
 from .domain.templates import TEMPLATES, build_from_template
 from .extensions import db
-from .models import Page, Response, Survey, utcnow
+from .models import Page, Question, Response, Survey, utcnow
 
 bp = Blueprint("surveys", __name__, url_prefix="/surveys")
 
@@ -21,8 +22,21 @@ def _require_login():
     pass
 
 
-def get_owned_survey(survey_id: int) -> Survey:
-    survey = db.session.get(Survey, survey_id)
+def get_owned_survey(survey_id: int, with_tree: bool = False) -> Survey:
+    """The current user's survey or 404. ``with_tree`` loads pages, questions,
+    choices and rules up front for pages that render all of them."""
+    if with_tree:
+        questions = selectinload(Survey.pages).selectinload(Page.questions)
+        survey = db.session.scalar(
+            select(Survey)
+            .where(Survey.id == survey_id)
+            .options(
+                questions.selectinload(Question.choices),
+                questions.selectinload(Question.branch_rules),
+            )
+        )
+    else:
+        survey = db.session.get(Survey, survey_id)
     if survey is None or survey.owner_id != current_user.id:
         abort(404)
     return survey
