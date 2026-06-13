@@ -54,3 +54,21 @@ def test_score_is_rounded_not_floored():
     # Halves round away from zero: 1 promoter, 7 others (12.5) -> 13, and -12.5 -> -13
     assert nps_score([10] + [7] * 7).score == 13
     assert nps_score([0] + [7] * 7).score == -13
+
+
+def test_nps_by_month(owner, db):
+    from datetime import datetime
+
+    from survey_builder.domain.results import nps_by_month
+
+    survey = make_published_survey(owner, [[("nps", "Recommend us?", {})]], title="Trend")
+    question = survey.questions[0]
+    for when, value in [
+        (datetime(2026, 4, 3), 10),
+        (datetime(2026, 4, 20), 2),
+        (datetime(2026, 5, 1), 9),
+        (datetime(2026, 5, 31, 23, 59), 9),
+    ]:
+        add_response(survey, {question: value}, when=when)
+    trend = nps_by_month(survey, question)
+    assert [(month, score.score) for month, score in trend] == [("2026-04", 0), ("2026-05", 100)]

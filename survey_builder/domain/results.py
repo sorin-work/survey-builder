@@ -174,6 +174,23 @@ def funnel(survey, period: ResponseFilter = ALL_TIME) -> Funnel:
     )
 
 
+def nps_by_month(survey, question, period: ResponseFilter = ALL_TIME) -> list[tuple[str, NpsScore]]:
+    """NPS per calendar month (UTC) of submission, oldest first."""
+    rows = db.session.execute(
+        select(Response.completed_at, Answer.number_value)
+        .join(Answer)
+        .where(
+            *completed_filter(survey, period),
+            Answer.question_id == question.id,
+            Answer.number_value.is_not(None),
+        )
+    ).all()
+    by_month: dict[str, list[int]] = defaultdict(list)
+    for completed_at, value in rows:
+        by_month[completed_at.strftime("%Y-%m")].append(value)
+    return [(month, nps_score(values)) for month, values in sorted(by_month.items())]
+
+
 def daily_counts(survey, period: ResponseFilter = ALL_TIME) -> list[tuple[date, int]]:
     """Completed responses per day, including days without any, oldest first."""
     stamps = db.session.scalars(
