@@ -74,7 +74,8 @@ Without `DATABASE_URL` the app uses a local SQLite file.
 
 ## API
 
-A read-only JSON API is described in [docs/api.md](docs/api.md).
+A read-only JSON API is described in [docs/api.md](docs/api.md). How the code is
+organised is described in [docs/architecture.md](docs/architecture.md).
 
 ## Tests
 
