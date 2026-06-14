@@ -12,3 +12,11 @@ document.querySelectorAll("[data-counter]").forEach((field) => {
   field.addEventListener("input", update);
   update();
 });
+
+// After a failed submit, bring the first question with an error into view.
+const firstError = document.querySelector(".public-question.has-error");
+if (firstError) {
+  firstError.scrollIntoView({ block: "center" });
+  const input = firstError.querySelector("input, textarea, select");
+  if (input) input.focus({ preventScroll: true });
+}
