@@ -251,3 +251,9 @@ def test_htmx_is_told_to_swap_validation_errors(auth_client, owner):
     config = json.loads(re.search(r'name="htmx-config" content=\'([^\']+)\'', html).group(1))
     rule = next(r for r in config["responseHandling"] if r["code"] == "422")
     assert rule["swap"] is True
+
+
+def test_required_checkbox_saves_on_change(auth_client, owner):
+    survey = make_survey(owner)
+    resp = add_question(auth_client, survey, "short_text")
+    assert "change from:find input[name='required']" in resp.get_data(as_text=True)
