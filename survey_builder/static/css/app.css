@@ -813,3 +813,15 @@ select.move-page {
 .chart-small {
   height: 160px;
 }
+
+.question.dirty {
+  border-color: #f59f00;
+}
+
+.question.dirty::after {
+  content: "Unsaved changes";
+  display: block;
+  font-size: 0.8rem;
+  color: #e67700;
+  margin-top: 0.35rem;
+}
