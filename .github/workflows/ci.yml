@@ -49,4 +49,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: docker build -t survey-builder:ci .
+
+      - name: Build and start the stack
+        run: docker compose up -d --build --wait --wait-timeout 120
+
+      - name: Smoke test
+        run: |
+          curl -fsS http://localhost:4416/healthz
+          curl -fsS http://localhost:4416/login | grep -q "Sign in"
+
+      - name: Logs on failure
+        if: failure()
+        run: docker compose logs
+
+      - name: Stop the stack
+        if: always()
+        run: docker compose down -v
