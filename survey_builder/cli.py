@@ -5,8 +5,9 @@ from flask import Flask
 from sqlalchemy import delete, select
 
 from .auth import EMAIL_RE, MIN_PASSWORD_LENGTH, normalize_email
+from .domain.export import to_csv
 from .extensions import db
-from .models import Response, User, utcnow
+from .models import Response, Survey, User, utcnow
 from .seed import DEMO_EMAIL, DEMO_PASSWORD, seed_demo
 
 
@@ -55,3 +56,15 @@ def register_cli(app: Flask) -> None:
         db.session.add(user)
         db.session.commit()
         click.echo(f"Created {email}.")
+
+    @app.cli.command("export-csv")
+    @click.argument("survey_id", type=int)
+    @click.option(
+        "--output", "-o", type=click.File("w"), default="-", help="File (default stdout)."
+    )
+    def export_csv_command(survey_id: int, output) -> None:
+        """Write the completed responses of a survey as CSV."""
+        survey = db.session.get(Survey, survey_id)
+        if survey is None:
+            raise click.ClickException(f"no survey with id {survey_id}")
+        output.write(to_csv(survey))

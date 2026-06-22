@@ -41,3 +41,13 @@ def test_create_user_command(app, db):
     assert again.exit_code != 0 and "already has an account" in again.output
     short = runner.invoke(args=["create-user", "x@example.com", "--password", "short"])
     assert short.exit_code != 0
+
+
+def test_export_csv_command(app, owner, db):
+    survey = make_published_survey(owner)
+    add_response(survey, {survey.questions[0]: "from the cli"})
+    result = app.test_cli_runner().invoke(args=["export-csv", str(survey.id)])
+    assert result.exit_code == 0
+    assert "from the cli" in result.output
+    missing = app.test_cli_runner().invoke(args=["export-csv", "999"])
+    assert missing.exit_code != 0 and "no survey" in missing.output
