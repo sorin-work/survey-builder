@@ -2,10 +2,11 @@ from datetime import timedelta
 
 import click
 from flask import Flask
-from sqlalchemy import delete
+from sqlalchemy import delete, select
 
+from .auth import EMAIL_RE, MIN_PASSWORD_LENGTH, normalize_email
 from .extensions import db
-from .models import Response, utcnow
+from .models import Response, User, utcnow
 from .seed import DEMO_EMAIL, DEMO_PASSWORD, seed_demo
 
 
@@ -35,3 +36,22 @@ def register_cli(app: Flask) -> None:
         """Delete abandoned (never submitted) responses older than --days."""
         removed = prune_incomplete(days)
         click.echo(f"Removed {removed} abandoned response{'s' if removed != 1 else ''}.")
+
+    @app.cli.command("create-user")
+    @click.argument("email")
+    @click.option("--name", default="", help="Display name (defaults to the email).")
+    @click.password_option()
+    def create_user_command(email: str, name: str, password: str) -> None:
+        """Create an owner account."""
+        email = normalize_email(email)
+        if not EMAIL_RE.match(email):
+            raise click.BadParameter("not a valid email address", param_hint="EMAIL")
+        if len(password) < MIN_PASSWORD_LENGTH:
+            raise click.BadParameter(f"use at least {MIN_PASSWORD_LENGTH} characters")
+        if db.session.scalar(select(User).filter_by(email=email)):
+            raise click.ClickException(f"{email} already has an account")
+        user = User(email=email, name=name.strip() or email)
+        user.set_password(password)
+        db.session.add(user)
+        db.session.commit()
+        click.echo(f"Created {email}.")
