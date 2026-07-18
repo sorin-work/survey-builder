@@ -218,3 +218,37 @@ def test_again_is_not_available_without_kiosk_mode(client, owner):
     survey = make_published_survey(owner, title="Normal")
     assert client.post(f"/s/{survey.share_token}/again").status_code == 404
     assert b"Start another response" not in client.get(f"/s/{survey.share_token}/thanks").data
+
+
+def test_answers_on_pages_skipped_after_going_back_are_dropped(client, owner, db):
+    from survey_builder.models import BranchRule
+
+    survey = make_published_survey(
+        owner,
+        [
+            [("single_choice", "Own a pet?", {"choices": ["Yes", "No"]})],
+            [("short_text", "Pet name", {})],
+            [("long_text", "Comments", {})],
+        ],
+        title="Pets",
+    )
+    first, second, third = survey.pages
+    own = first.questions[0]
+    yes, no = own.choices
+    pet_name = second.questions[0]
+    comments = third.questions[0]
+    own.branch_rules = [BranchRule(choice=no, target_page=third)]
+    db.session.commit()
+    url = f"/s/{survey.share_token}"
+
+    client.post(url, data={"page_id": first.id, f"q{own.id}": yes.id})
+    client.post(url, data={"page_id": second.id, f"q{pet_name.id}": "Rex"})
+    client.post(f"{url}/back")
+    client.post(f"{url}/back")
+    client.post(url, data={"page_id": first.id, f"q{own.id}": no.id})
+    client.post(url, data={"page_id": third.id, f"q{comments.id}": "No pets here"})
+
+    response = db.session.query(Response).one()
+    assert response.is_complete
+    stored = {a.question_id for a in response.answers}
+    assert stored == {own.id, comments.id}

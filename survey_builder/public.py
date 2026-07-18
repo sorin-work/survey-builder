@@ -87,6 +87,17 @@ def store_answers(response: Response, page: Page, parsed) -> None:
             )
 
 
+def drop_skipped_answers(survey: Survey, response: Response, visited: set[int]) -> None:
+    """Forget answers to pages the respondent did not pass through in the end.
+
+    Someone can answer page 2, go back and change an answer so that a skip
+    rule now jumps over page 2; those answers must not count.
+    """
+    on_path = {q.id for p in survey.pages if p.id in visited for q in p.questions}
+    for answer in [a for a in response.answers if a.question_id not in on_path]:
+        response.answers.remove(answer)
+
+
 def saved_values(response: Response | None, page: Page) -> dict[int, list[str]]:
     """Answers already stored for a page, in the shape the form fields expect."""
     if response is None:
@@ -186,6 +197,7 @@ def submit(token: str):
 
     following = next_page(survey, page, parsed)
     if following is None:
+        drop_skipped_answers(survey, response, {*state.get("history", []), page.id})
         response.completed_at = utcnow()
         state["done"] = True
     else:
