@@ -13,17 +13,10 @@ document.addEventListener("click", (event) => {
 });
 
 // Mark question cards with unsaved edits and warn before leaving the page.
+// Saving swaps in a fresh card from the server, which drops the marker.
 document.addEventListener("input", (event) => {
   const card = event.target.closest(".question");
   if (card && event.target.name !== "required") card.classList.add("dirty");
-});
-
-document.addEventListener("htmx:afterSwap", () => {
-  // A swapped-in card is fresh from the server, so nothing is pending there.
-  document.querySelectorAll(".question.dirty").forEach((card) => {
-    if (!document.body.contains(card)) return;
-    if (!card.querySelector("[data-dirty]")) card.classList.remove("dirty");
-  });
 });
 
 window.addEventListener("beforeunload", (event) => {
