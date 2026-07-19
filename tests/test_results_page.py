@@ -127,3 +127,14 @@ def test_text_answers_cannot_inject_html(auth_client, owner):
         html = auth_client.get(url).get_data(as_text=True)
         assert "<script>alert" not in html
         assert "&lt;script&gt;alert" in html
+
+
+def test_multiple_choice_shares_are_explained(auth_client, owner):
+    survey = make_published_survey(
+        owner, [[("multiple_choice", "Pets", {"choices": ["Cat", "Dog"]})]], title="Multi"
+    )
+    pets = survey.questions[0]
+    add_response(survey, {pets: ["Cat", "Dog"]})
+    html = auth_client.get(f"/surveys/{survey.id}/results/").get_data(as_text=True)
+    assert "Of respondents" in html
+    assert "add up to more than 100%" in html

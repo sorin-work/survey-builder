@@ -104,7 +104,8 @@
               median <strong>{{ summary.median|round(1) }}</strong></p>
           {% endif %}
           <table class="result-table">
-            <thead><tr><th>Answer</th><th class="num">Count</th><th class="num">Share</th></tr></thead>
+            <thead><tr><th>Answer</th><th class="num">Count</th>
+              <th class="num">{{ "Of respondents" if question.type == "multiple_choice" else "Share" }}</th></tr></thead>
             <tbody>
               {% for label in summary.labels %}
                 <tr>
@@ -115,6 +116,9 @@
               {% endfor %}
             </tbody>
           </table>
+          {% if question.type == "multiple_choice" %}
+            <p class="muted small">Respondents could pick more than one option, so the shares add up to more than 100%.</p>
+          {% endif %}
         {% elif question.type in ("short_text", "long_text") %}
           {% if summary.texts %}
             <ul class="text-answers">
