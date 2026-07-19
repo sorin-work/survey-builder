@@ -84,6 +84,8 @@ pytest
 ruff check . && ruff format --check .
 ```
 
+Optional: `pip install pre-commit && pre-commit install` runs ruff on every commit.
+
 The `Makefile` wraps the usual commands: `make install`, `make dev`, `make check`,
 `make format`, `make up`.
 
