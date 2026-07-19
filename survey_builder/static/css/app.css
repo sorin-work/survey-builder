@@ -591,7 +591,7 @@ input.question-prompt {
   display: inline-block;
 }
 
-.tabs a.tabs-action {
+.tabs .tabs-action {
   margin-left: auto;
   color: var(--accent);
 }
@@ -824,4 +824,36 @@ select.move-page {
   font-size: 0.8rem;
   color: #e67700;
   margin-top: 0.35rem;
+}
+
+/* Printing the results page gives a clean report. */
+@media print {
+  .topbar,
+  .tabs,
+  .period-filter,
+  .page-header a,
+  .pager,
+  .flash {
+    display: none;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  .container {
+    max-width: none;
+    padding: 0;
+  }
+
+  .card {
+    border: none;
+    padding: 0;
+    break-inside: avoid;
+  }
+
+  .chart-wrap {
+    height: 180px;
+  }
 }
