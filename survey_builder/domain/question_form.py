@@ -62,3 +62,25 @@ def parse_question_form(question, form) -> tuple[QuestionChanges, dict[str, str]
         labels=labels,
     )
     return changes, errors
+
+
+MAX_CHOICES = 50
+
+
+def parse_bulk_choices(text: str, existing: list[str]) -> tuple[list[str], str | None]:
+    """Options pasted one per line. Blank lines and duplicates are skipped."""
+    seen = {label.casefold() for label in existing}
+    labels = []
+    for line in text.splitlines():
+        label = line.strip().lstrip("-*•").strip()
+        if not label or label.casefold() in seen:
+            continue
+        if len(label) > CHOICE_MAX:
+            return [], f"Keep options under {CHOICE_MAX} characters."
+        seen.add(label.casefold())
+        labels.append(label)
+    if not labels:
+        return [], "Paste at least one new option, one per line."
+    if len(existing) + len(labels) > MAX_CHOICES:
+        return [], f"A question can have at most {MAX_CHOICES} options."
+    return labels, None
