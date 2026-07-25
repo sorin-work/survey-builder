@@ -38,6 +38,14 @@
       <button class="link" type="button"
               hx-post="{{ url_for('editor.add_choice', survey_id=survey.id, question_id=question.id) }}"
               hx-target="#question-{{ question.id }}" hx-swap="outerHTML">+ Add option</button>
+      <details class="bulk-options">
+        <summary class="muted small">Paste several options</summary>
+        <textarea name="options" rows="4" placeholder="One option per line" aria-label="Options, one per line"></textarea>
+        <button class="btn btn-secondary btn-small" type="button"
+                hx-post="{{ url_for('editor.add_choices_in_bulk', survey_id=survey.id, question_id=question.id) }}"
+                hx-include="closest .bulk-options" hx-target="#question-{{ question.id }}"
+                hx-swap="outerHTML">Add options</button>
+      </details>
     {% endif %}
     {% if QUESTION_TYPES[question.type].has_choices %}
       {% include "editor/_rules.html" %}

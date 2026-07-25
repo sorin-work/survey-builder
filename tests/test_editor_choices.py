@@ -82,3 +82,33 @@ def test_choice_of_foreign_survey_is_404(auth_client, owner, db):
     question = choice_question(db, theirs)
     choice = question.choices[0]
     assert auth_client.post(f"/surveys/{mine.id}/choices/{choice.id}/delete").status_code == 404
+
+
+def test_add_choices_in_bulk(auth_client, owner, db):
+    survey = make_survey(owner)
+    question = choice_question(db, survey)
+    resp = auth_client.post(
+        f"/surveys/{survey.id}/questions/{question.id}/choices/bulk",
+        data={"options": "Green\nred\nYellow\n"},
+        headers=HX,
+    )
+    assert resp.status_code == 200
+    db.session.refresh(question)
+    assert [(c.label, c.position) for c in question.choices] == [
+        ("Red", 0),
+        ("Blue", 1),
+        ("Green", 2),
+        ("Yellow", 3),
+    ]
+
+
+def test_bulk_add_reports_errors(auth_client, owner, db):
+    survey = make_survey(owner)
+    question = choice_question(db, survey)
+    resp = auth_client.post(
+        f"/surveys/{survey.id}/questions/{question.id}/choices/bulk",
+        data={"options": "Red\nBlue"},
+        headers=HX,
+    )
+    assert resp.status_code == 422
+    assert b"at least one new option" in resp.data

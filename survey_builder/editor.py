@@ -11,7 +11,7 @@ from flask_login import login_required
 from .domain import sharing
 from .domain.answers import parse_page
 from .domain.branching import prune_invalid_rules, valid_targets
-from .domain.question_form import PROMPT_MAX, parse_question_form
+from .domain.question_form import PROMPT_MAX, parse_bulk_choices, parse_question_form
 from .domain.question_types import default_settings, get_type
 from .domain.results import completed_response_count
 from .extensions import db
@@ -200,6 +200,25 @@ def add_choice(survey_id: int, question_id: int):
         abort(400)
     number = len(question.choices) + 1
     question.choices.append(Choice(label=f"Option {number}", position=number - 1))
+    db.session.commit()
+    if is_htmx():
+        return render_question(survey, question)
+    return back_to_editor(survey, f"question-{question.id}")
+
+
+@bp.post("/questions/<int:question_id>/choices/bulk")
+def add_choices_in_bulk(survey_id: int, question_id: int):
+    survey = get_owned_survey(survey_id)
+    question = get_question(survey, question_id)
+    if not get_type(question.type).has_choices:
+        abort(400)
+    labels, error = parse_bulk_choices(
+        request.form.get("options", ""), [c.label for c in question.choices]
+    )
+    if error:
+        return render_question(survey, question, {"choices": error}, 422)
+    for label in labels:
+        question.choices.append(Choice(label=label, position=len(question.choices)))
     db.session.commit()
     if is_htmx():
         return render_question(survey, question)

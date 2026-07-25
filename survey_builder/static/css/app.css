@@ -857,3 +857,11 @@ select.move-page {
     height: 180px;
   }
 }
+
+.bulk-options {
+  margin: 0.25rem 0 0.75rem;
+}
+
+.bulk-options textarea {
+  margin: 0.35rem 0;
+}
