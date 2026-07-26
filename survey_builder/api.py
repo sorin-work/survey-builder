@@ -3,10 +3,18 @@
 from flask import Blueprint, abort, jsonify, request
 from flask_login import current_user
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
-from .domain.results import ResponseFilter, completed_response_count, funnel, summarize
+from .domain.pagination import Pagination
+from .domain.results import (
+    ResponseFilter,
+    completed_filter,
+    completed_response_count,
+    funnel,
+    summarize,
+)
 from .extensions import csrf, db
-from .models import Survey
+from .models import Answer, Response, Survey
 
 bp = Blueprint("api", __name__, url_prefix="/api")
 csrf.exempt(bp)
@@ -43,11 +51,68 @@ def list_surveys():
     return jsonify(surveys=[survey_json(s) for s in surveys])
 
 
-@bp.get("/surveys/<int:survey_id>/summary")
-def summary(survey_id: int):
+def owned_survey(survey_id: int) -> Survey:
     survey = db.session.get(Survey, survey_id)
     if survey is None or survey.owner_id != current_user.id:
         abort(404)
+    return survey
+
+
+def answer_value(question, answers):
+    if not answers:
+        return None
+    if question.type == "multiple_choice":
+        return [a.choice.label for a in answers]
+    answer = answers[0]
+    if answer.choice_id is not None:
+        return answer.choice.label
+    if answer.number_value is not None:
+        return answer.number_value
+    if answer.date_value is not None:
+        return answer.date_value.isoformat()
+    return answer.text_value
+
+
+@bp.get("/surveys/<int:survey_id>/responses")
+def responses(survey_id: int):
+    survey = owned_survey(survey_id)
+    period = ResponseFilter.from_args(request.args)
+    per_page = min(max(request.args.get("per_page", 50, type=int), 1), 200)
+    pagination = Pagination.from_request(
+        request.args.get("page"), completed_response_count(survey, period), per_page=per_page
+    )
+    rows = db.session.scalars(
+        select(Response)
+        .where(*completed_filter(survey, period))
+        .order_by(Response.completed_at, Response.id)
+        .offset(pagination.offset)
+        .limit(pagination.per_page)
+        .options(selectinload(Response.answers).selectinload(Answer.choice))
+    ).all()
+    questions = survey.questions
+    items = []
+    for response in rows:
+        by_question = {}
+        for answer in response.answers:
+            by_question.setdefault(answer.question_id, []).append(answer)
+        items.append(
+            {
+                "id": response.id,
+                "completed_at": response.completed_at.isoformat() + "Z",
+                "answers": {str(q.id): answer_value(q, by_question.get(q.id)) for q in questions},
+            }
+        )
+    return jsonify(
+        responses=items,
+        page=pagination.page,
+        pages=pagination.pages,
+        total=pagination.total,
+    )
+
+
+@bp.get("/surveys/<int:survey_id>/summary")
+def summary(survey_id: int):
+    survey = owned_survey(survey_id)
     period = ResponseFilter.from_args(request.args)
     stats = funnel(survey, period)
     questions = []
