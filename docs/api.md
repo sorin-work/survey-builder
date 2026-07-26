@@ -74,3 +74,40 @@ the summary to responses submitted in that period.
 - Rating and NPS questions include `average`; NPS questions also include `nps`.
 - Text questions only report how many people `answered`. Use the CSV export
   (`/surveys/<id>/results/export.csv`) for the answers themselves.
+
+## `GET /api/surveys/<id>/responses`
+
+Completed responses, oldest first. Query parameters:
+
+| Parameter  | Default | Notes                                        |
+| ---------- | ------- | -------------------------------------------- |
+| `page`     | `1`     | Out of range values are clamped               |
+| `per_page` | `50`    | 1 to 200                                      |
+| `from`, `to` | —     | Same date filter as the summary               |
+| `choice`   | —       | Only respondents who picked this choice id    |
+
+```json
+{
+  "responses": [
+    {
+      "id": 412,
+      "completed_at": "2026-07-21T18:03:11Z",
+      "answers": {
+        "3": "Business",
+        "4": ["Dashboards", "CSV export"],
+        "5": "2024-03-01",
+        "6": 4,
+        "7": 9,
+        "8": null
+      }
+    }
+  ],
+  "page": 1,
+  "pages": 3,
+  "total": 140
+}
+```
+
+`answers` is keyed by question id (as a string). Values are the choice label,
+a list of labels for multiple choice, a number for rating and NPS, an ISO date
+or the text. Unanswered questions are `null`.
