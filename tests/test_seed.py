@@ -8,7 +8,7 @@ def test_seed_creates_demo_account_once(db):
     assert seed_demo(responses=20) is False
     user = db.session.query(User).filter_by(email=DEMO_EMAIL).one()
     assert user.check_password(DEMO_PASSWORD)
-    assert db.session.query(Survey).count() == 3
+    assert db.session.query(Survey).count() == 4
 
 
 def test_seeded_surveys_have_results(db):
@@ -34,3 +34,12 @@ def test_offsite_survey_has_a_skip_rule(db):
     (rule,) = joining.branch_rules
     assert rule.choice.label == "No" and rule.ends_survey
     assert completed_response_count(offsite) == 9
+
+
+def test_event_survey_is_closed_by_date(db):
+    from survey_builder.domain.sharing import closed_reason
+
+    seed_demo(responses=1)
+    event = db.session.query(Survey).filter_by(title="Spring meetup feedback").one()
+    assert closed_reason(event) == "date"
+    assert completed_response_count(event) == 36

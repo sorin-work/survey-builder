@@ -12,6 +12,11 @@ from .models import Answer, BranchRule, Choice, Page, Question, Response, Survey
 DEMO_EMAIL = "demo@example.com"
 DEMO_PASSWORD = "demo-password"
 
+LONG_COMMENTS = [
+    "Two things:\n- the export is great\n- the mobile app needs work",
+    "I use it daily.\nPlease never remove the keyboard shortcuts!",
+]
+
 COMMENTS = [
     "Setup took five minutes, which was great.",
     "Support answered within the hour. Thanks!",
@@ -152,7 +157,8 @@ def _fake_customer_responses(survey: Survey, count: int, rng: random.Random) -> 
             Answer(question=nps, number_value=rng.choices(range(11), [1] * 6 + [2, 4, 5, 6, 5])[0])
         )
         if rng.random() < 0.4:
-            answers.append(Answer(question=comments, text_value=rng.choice(COMMENTS)))
+            pool = COMMENTS if rng.random() < 0.85 else LONG_COMMENTS
+            answers.append(Answer(question=comments, text_value=rng.choice(pool)))
         response.answers = answers
         db.session.add(response)
 
@@ -186,6 +192,38 @@ def _fake_offsite_responses(survey: Survey, rng: random.Random) -> None:
             response.answers.append(Answer(question=diet, text_value="Vegetarian, please."))
 
 
+def _event_survey(owner: User, rng: random.Random) -> Survey:
+    """A finished survey: built from the event template and closed by date."""
+    from .domain.templates import TEMPLATES, build_from_template
+
+    survey = build_from_template(TEMPLATES["event"], owner.id)
+    survey.owner = owner
+    survey.title = "Spring meetup feedback"
+    survey.status = "published"
+    survey.share_token = secrets.token_urlsafe(12)
+    survey.closes_on = (utcnow() - timedelta(days=20)).date()
+    overall, enjoyed = survey.pages[0].questions
+    again, _ = survey.pages[1].questions
+    for _ in range(36):
+        completed = utcnow() - timedelta(days=rng.randint(21, 35), hours=rng.randint(0, 23))
+        response = Response(
+            survey=survey,
+            key=secrets.token_hex(16),
+            started_at=completed - timedelta(minutes=rng.randint(1, 4)),
+            completed_at=completed,
+        )
+        response.answers = [
+            Answer(question=overall, number_value=rng.choices([2, 3, 4, 5], [1, 2, 5, 4])[0]),
+            *(
+                Answer(question=enjoyed, choice=c)
+                for c in rng.sample(enjoyed.choices, rng.randint(1, 3))
+            ),
+            Answer(question=again, choice=rng.choices(again.choices, [6, 3, 1])[0]),
+        ]
+        db.session.add(response)
+    return survey
+
+
 def seed_demo(responses: int = 140) -> bool:
     """Create the demo account and its data. Returns False if it already exists."""
     if db.session.scalar(select(User).filter_by(email=DEMO_EMAIL)):
@@ -197,6 +235,8 @@ def seed_demo(responses: int = 140) -> bool:
     offsite = _offsite_survey(owner)
     draft = _draft_survey(owner)
     db.session.add_all([owner, customer, offsite, draft])
+    event = _event_survey(owner, rng)
+    db.session.add(event)
     db.session.flush()
     now = utcnow()
     customer.published_at = now - timedelta(days=121)
