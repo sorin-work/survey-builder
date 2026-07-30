@@ -138,3 +138,12 @@ def test_multiple_choice_shares_are_explained(auth_client, owner):
     html = auth_client.get(f"/surveys/{survey.id}/results/").get_data(as_text=True)
     assert "Of respondents" in html
     assert "add up to more than 100%" in html
+
+
+def test_skipped_counts_are_shown(auth_client, owner):
+    survey = build(owner)
+    plan, rating, *_ = survey.questions
+    add_response(survey, {plan: "Free", rating: 3})
+    add_response(survey, {plan: "Pro"})
+    html = auth_client.get(f"/surveys/{survey.id}/results/").get_data(as_text=True)
+    assert "1 answered, 1 skipped" in html

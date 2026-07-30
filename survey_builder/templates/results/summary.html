@@ -70,7 +70,9 @@
       <section class="card result" id="result-{{ question.id }}">
         <div class="result-header">
           <h2>{{ question.prompt }}</h2>
-          <span class="muted">{{ summary.answered }} answered &middot; {{ QUESTION_TYPES[question.type].label }}</span>
+          <span class="muted">{{ summary.answered }} answered
+            {%- if total > summary.answered %}, {{ total - summary.answered }} skipped{% endif %}
+            &middot; {{ QUESTION_TYPES[question.type].label }}</span>
         </div>
 
         {% if question.type in ("single_choice", "multiple_choice", "rating", "nps") %}
