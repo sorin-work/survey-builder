@@ -44,3 +44,15 @@ def test_deleting_question_removes_choices(db):
     db.session.delete(question)
     db.session.commit()
     assert db.session.query(Choice).count() == 0
+
+
+def test_is_owned_by(db):
+    owner = make_owner(db)
+    other = User(email="x@example.com", name="X", password_hash="x")
+    db.session.add(other)
+    survey = Survey(owner=owner, title="Mine")
+    db.session.add(survey)
+    db.session.commit()
+    assert survey.is_owned_by(owner)
+    assert not survey.is_owned_by(other)
+    assert not survey.is_owned_by(None)

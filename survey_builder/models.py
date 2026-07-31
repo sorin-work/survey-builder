@@ -68,6 +68,9 @@ class Survey(db.Model):
     def questions(self) -> list["Question"]:
         return [q for page in self.pages for q in page.questions]
 
+    def is_owned_by(self, user) -> bool:
+        return user is not None and getattr(user, "id", None) == self.owner_id
+
     def question_number(self, question: "Question") -> int:
         """1-based number of a question across all pages."""
         return self.questions.index(question) + 1

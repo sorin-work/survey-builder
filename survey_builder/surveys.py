@@ -37,7 +37,7 @@ def get_owned_survey(survey_id: int, with_tree: bool = False) -> Survey:
         )
     else:
         survey = db.session.get(Survey, survey_id)
-    if survey is None or survey.owner_id != current_user.id:
+    if survey is None or not survey.is_owned_by(current_user):
         abort(404)
     return survey
 
