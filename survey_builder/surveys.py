@@ -88,7 +88,12 @@ SORTS = {
 def dashboard():
     query = request.args.get("q", "").strip()
     status = request.args.get("status", "")
+    show_archived = request.args.get("archived") == "1"
     stmt = select(Survey).filter_by(owner_id=current_user.id)
+    if show_archived:
+        stmt = stmt.where(Survey.archived_at.is_not(None))
+    else:
+        stmt = stmt.where(Survey.archived_at.is_(None))
     if query:
         escaped = query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
         stmt = stmt.where(Survey.title.ilike(f"%{escaped}%", escape="\\"))
@@ -113,6 +118,7 @@ def dashboard():
         query=query,
         status=status,
         sort=sort,
+        show_archived=show_archived,
         sorts={key: label for key, (label, _) in SORTS.items()},
         filtered=bool(query or status),
     )

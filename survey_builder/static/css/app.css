@@ -865,3 +865,8 @@ select.move-page {
 .bulk-options textarea {
   margin: 0.35rem 0;
 }
+
+.filters-link {
+  align-self: center;
+  white-space: nowrap;
+}

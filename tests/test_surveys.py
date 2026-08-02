@@ -201,3 +201,16 @@ def test_archive_closes_and_unarchive_restores(auth_client, owner, db):
 def test_cannot_archive_foreign_survey(auth_client):
     survey = make_survey(make_user("other@example.com"))
     assert auth_client.post(f"/surveys/{survey.id}/archive").status_code == 404
+
+
+def test_archived_surveys_have_their_own_list(auth_client, owner, db):
+    from survey_builder.models import utcnow
+
+    make_survey(owner, title="Active one")
+    make_survey(owner, title="Archived one", archived_at=utcnow())
+    html = auth_client.get("/surveys/").get_data(as_text=True)
+    assert "Active one" in html and "Archived one" not in html
+    html = auth_client.get("/surveys/?archived=1").get_data(as_text=True)
+    assert "Archived surveys" in html
+    assert "Archived one" in html and "Active one" not in html
+    assert "Restore" in html
