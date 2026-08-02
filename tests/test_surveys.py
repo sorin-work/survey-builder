@@ -183,3 +183,21 @@ def test_toggle_kiosk_mode(auth_client, owner, db):
     auth_client.post(url, data={"title": "T"})
     db.session.refresh(survey)
     assert survey.allow_multiple is False
+
+
+def test_archive_closes_and_unarchive_restores(auth_client, owner, db):
+    from factories import make_published_survey
+
+    survey = make_published_survey(owner, title="Old one")
+    auth_client.post(f"/surveys/{survey.id}/archive")
+    db.session.refresh(survey)
+    assert survey.archived_at is not None
+    assert survey.status == "closed"
+    auth_client.post(f"/surveys/{survey.id}/unarchive")
+    db.session.refresh(survey)
+    assert survey.archived_at is None
+
+
+def test_cannot_archive_foreign_survey(auth_client):
+    survey = make_survey(make_user("other@example.com"))
+    assert auth_client.post(f"/surveys/{survey.id}/archive").status_code == 404

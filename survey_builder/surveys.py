@@ -235,3 +235,24 @@ def duplicate(survey_id: int):
     db.session.commit()
     flash(f"Created \u201c{clone.title}\u201d as a draft.", "success")
     return redirect(url_for("editor.edit", survey_id=clone.id))
+
+
+@bp.post("/<int:survey_id>/archive")
+def archive(survey_id: int):
+    survey = get_owned_survey(survey_id)
+    if survey.archived_at is None:
+        survey.archived_at = utcnow()
+        if survey.status == sharing.PUBLISHED:
+            survey.status = sharing.CLOSED
+        db.session.commit()
+        flash(f"Archived \u201c{survey.title}\u201d.", "success")
+    return redirect(url_for("surveys.dashboard"))
+
+
+@bp.post("/<int:survey_id>/unarchive")
+def unarchive(survey_id: int):
+    survey = get_owned_survey(survey_id)
+    survey.archived_at = None
+    db.session.commit()
+    flash(f"Restored \u201c{survey.title}\u201d.", "success")
+    return redirect(url_for("surveys.dashboard", archived=1))
