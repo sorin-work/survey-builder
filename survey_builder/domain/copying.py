@@ -12,6 +12,7 @@ def copy_survey(survey: Survey, title: str | None = None) -> Survey:
         description=survey.description,
         thank_you_message=survey.thank_you_message,
         allow_multiple=survey.allow_multiple,
+        accent_color=survey.accent_color,
     )
     pages: dict[int, Page] = {}
     choices: dict[int, Choice] = {}

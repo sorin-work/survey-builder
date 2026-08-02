@@ -214,3 +214,15 @@ def test_archived_surveys_have_their_own_list(auth_client, owner, db):
     assert "Archived surveys" in html
     assert "Archived one" in html and "Active one" not in html
     assert "Restore" in html
+
+
+def test_accent_color_setting(auth_client, owner, db):
+    survey = make_survey(owner)
+    url = f"/surveys/{survey.id}/settings"
+    auth_client.post(url, data={"title": "T", "accent_color": "#E8590C"})
+    db.session.refresh(survey)
+    assert survey.accent_color == "#e8590c"
+    resp = auth_client.post(url, data={"title": "T", "accent_color": "red; background: url(x)"})
+    assert resp.status_code == 422
+    db.session.refresh(survey)
+    assert survey.accent_color == "#e8590c"

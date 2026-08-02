@@ -1,3 +1,4 @@
+import re
 from datetime import date
 
 from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
@@ -43,6 +44,7 @@ def get_owned_survey(survey_id: int, with_tree: bool = False) -> Survey:
 
 
 THANK_YOU_MAX = 2000
+COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
 
 
 def validate_survey_form(title: str, thank_you: str = "") -> dict[str, str]:
@@ -169,6 +171,7 @@ def edit(survey_id: int):
         "closes_on": survey.closes_on.isoformat() if survey.closes_on else "",
         "response_limit": survey.response_limit or "",
         "allow_multiple": survey.allow_multiple,
+        "accent_color": survey.accent_color or "",
     }
     errors: dict[str, str] = {}
     if request.method == "POST":
@@ -179,14 +182,18 @@ def edit(survey_id: int):
             "closes_on": request.form.get("closes_on", "").strip(),
             "response_limit": request.form.get("response_limit", "").strip(),
             "allow_multiple": request.form.get("allow_multiple") == "on",
+            "accent_color": request.form.get("accent_color", "").strip().lower(),
         }
         errors = validate_survey_form(form["title"], form["thank_you_message"])
         share, share_errors = parse_share_settings(request.form)
         errors.update(share_errors)
+        if form["accent_color"] and not COLOR_RE.match(form["accent_color"]):
+            errors["accent_color"] = "Use a colour like #3b5bdb."
         if not errors:
             survey.closes_on = share["closes_on"]
             survey.response_limit = share["response_limit"]
             survey.allow_multiple = form["allow_multiple"]
+            survey.accent_color = form["accent_color"] or None
             survey.title = form["title"]
             survey.description = form["description"]
             survey.thank_you_message = form["thank_you_message"]

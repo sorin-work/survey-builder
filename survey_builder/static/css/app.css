@@ -870,3 +870,8 @@ select.move-page {
   align-self: center;
   white-space: nowrap;
 }
+
+.color-input {
+  max-width: 10rem;
+  font-family: ui-monospace, monospace;
+}

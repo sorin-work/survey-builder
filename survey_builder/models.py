@@ -50,6 +50,7 @@ class Survey(db.Model):
     share_token: Mapped[str | None] = mapped_column(String(32), unique=True)
     published_at: Mapped[datetime | None] = mapped_column(DateTime)
     archived_at: Mapped[datetime | None] = mapped_column(DateTime)
+    accent_color: Mapped[str | None] = mapped_column(String(7))
     closes_on: Mapped[date | None] = mapped_column(Date)
     response_limit: Mapped[int | None] = mapped_column(Integer)
     # Kiosk mode: let the same browser submit several responses.

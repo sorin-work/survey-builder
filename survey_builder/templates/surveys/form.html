@@ -21,6 +21,12 @@
                     placeholder="Your answers have been recorded.">{{ form.thank_you_message }}</textarea>
           {% if errors.thank_you_message %}<div class="field-error">{{ errors.thank_you_message }}</div>{% endif %}
         </div>
+        <div class="field">
+          <label for="accent_color">Accent colour <span class="muted">(public pages)</span></label>
+          <input type="text" id="accent_color" name="accent_color" value="{{ form.accent_color }}"
+                 placeholder="#3b5bdb" maxlength="7" class="color-input">
+          {% if errors.accent_color %}<div class="field-error">{{ errors.accent_color }}</div>{% endif %}
+        </div>
         <fieldset class="share-settings">
           <legend>Collecting responses</legend>
           <div class="settings-grid">
