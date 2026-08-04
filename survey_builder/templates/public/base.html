@@ -6,6 +6,9 @@
     <title>{% block title %}{{ survey.title }}{% endblock %}</title>
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.svg') }}" type="image/svg+xml">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+    {% if survey.accent_color %}
+      <style>:root { --accent: {{ survey.accent_color }}; --accent-dark: {{ survey.accent_color }}; }</style>
+    {% endif %}
   </head>
   <body class="public">
     <main class="container narrow-public">

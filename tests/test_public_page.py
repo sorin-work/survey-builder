@@ -164,3 +164,11 @@ def test_unshuffled_choices_keep_their_order(client, owner):
     )
     html = client.get(f"/s/{survey.share_token}").get_data(as_text=True)
     assert re.findall(r"([ABC]\d)\n", html) == ["A1", "B2", "C3"]
+
+
+def test_accent_color_is_applied(client, owner, db):
+    survey = make_published_survey(owner, title="Branded")
+    survey.accent_color = "#e8590c"
+    db.session.commit()
+    html = client.get(f"/s/{survey.share_token}").get_data(as_text=True)
+    assert "--accent: #e8590c;" in html
