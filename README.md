@@ -67,10 +67,24 @@ Without `DATABASE_URL` the app uses a local SQLite file.
 | `DATABASE_URL`   | `sqlite:///survey_builder.db` | SQLAlchemy URL; `postgresql://` URLs use psycopg 3 |
 | `SECRET_KEY`     | `dev-secret-change-me`      | Signs sessions and CSRF tokens. Set it in production |
 | `SECURE_COOKIES` | `false`                     | Mark cookies `Secure` (turn on behind HTTPS)      |
+| `ALLOW_EMBEDDING`| `false`                     | `SameSite=None; Secure` cookies so surveys work inside iframes on other sites (HTTPS only) |
 | `SEED_DEMO`      | `false` (`true` in compose) | Create the demo account on container start        |
 | `WEB_PORT`       | `4416`                      | Host port used by docker compose                  |
 | `WEB_CONCURRENCY`| `2`                         | Gunicorn workers in the container                 |
 | `LOG_LEVEL`      | `info`                      | Log level; every request is logged with its id    |
+
+## Embedding a survey
+
+Public survey pages may be framed. Add `?embed=1` to the share link to hide the
+footer and use a transparent background:
+
+```html
+<iframe src="https://surveys.example.com/s/TOKEN?embed=1" width="100%" height="700"></iframe>
+```
+
+When the iframe is on another domain, browsers only send the session cookie if
+it is `SameSite=None; Secure`. Set `ALLOW_EMBEDDING=true` and serve the app over
+HTTPS, otherwise respondents cannot get past the first page.
 
 ## API
 

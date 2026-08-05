@@ -28,3 +28,13 @@ def test_cookie_flags(monkeypatch):
     assert config["SESSION_COOKIE_SECURE"] is False
     monkeypatch.setenv("SECURE_COOKIES", "true")
     assert load_config()["SESSION_COOKIE_SECURE"] is True
+
+
+def test_embedding_needs_cross_site_cookies(monkeypatch):
+    from survey_builder.config import load_config
+
+    monkeypatch.delenv("SECURE_COOKIES", raising=False)
+    monkeypatch.setenv("ALLOW_EMBEDDING", "true")
+    config = load_config()
+    assert config["SESSION_COOKIE_SAMESITE"] == "None"
+    assert config["SESSION_COOKIE_SECURE"] is True
