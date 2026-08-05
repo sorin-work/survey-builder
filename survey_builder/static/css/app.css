@@ -875,3 +875,11 @@ select.move-page {
   max-width: 10rem;
   font-family: ui-monospace, monospace;
 }
+
+body.embedded {
+  background: transparent;
+}
+
+body.embedded .container {
+  padding: 0.5rem;
+}

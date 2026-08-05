@@ -9,7 +9,7 @@ who only open the link do not show up as abandoned responses.
 import random
 import secrets
 
-from flask import Blueprint, abort, redirect, render_template, request, session, url_for
+from flask import Blueprint, abort, g, redirect, render_template, request, session, url_for
 from sqlalchemy import select
 
 from .domain import sharing
@@ -19,6 +19,15 @@ from .extensions import db
 from .models import Answer, Page, Response, Survey, utcnow
 
 bp = Blueprint("public", __name__, url_prefix="/s")
+
+
+@bp.before_request
+def _allow_embedding():
+    # Public surveys may be shown in an <iframe> on the owner's website.
+    g.allow_framing = True
+    g.embed = request.args.get("embed") == "1" or session.get("embed") is True
+    if request.args.get("embed") == "1":
+        session["embed"] = True
 
 
 def get_survey_by_token(token: str) -> Survey:

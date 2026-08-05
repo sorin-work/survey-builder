@@ -172,3 +172,18 @@ def test_accent_color_is_applied(client, owner, db):
     db.session.commit()
     html = client.get(f"/s/{survey.share_token}").get_data(as_text=True)
     assert "--accent: #e8590c;" in html
+
+
+def test_public_pages_can_be_embedded(client, owner):
+    survey = make_published_survey(owner, title="Embedded")
+    resp = client.get(f"/s/{survey.share_token}?embed=1")
+    assert "X-Frame-Options" not in resp.headers
+    html = resp.get_data(as_text=True)
+    assert 'class="public embedded"' in html
+    assert "Made with Survey Builder" not in html
+    # The choice sticks for the rest of the visit.
+    assert "embedded" in client.get(f"/s/{survey.share_token}").get_data(as_text=True)
+
+
+def test_owner_pages_still_refuse_framing(auth_client):
+    assert auth_client.get("/surveys/").headers["X-Frame-Options"] == "DENY"

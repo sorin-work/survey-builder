@@ -10,11 +10,11 @@
       <style>:root { --accent: {{ survey.accent_color }}; --accent-dark: {{ survey.accent_color }}; }</style>
     {% endif %}
   </head>
-  <body class="public">
+  <body class="public{% if g.embed %} embedded{% endif %}">
     <main class="container narrow-public">
       {% block content %}{% endblock %}
     </main>
-    <footer class="public-footer muted">Made with Survey Builder</footer>
+    {% if not g.embed %}<footer class="public-footer muted">Made with Survey Builder</footer>{% endif %}
     <script src="{{ url_for('static', filename='js/public.js') }}" defer></script>
   </body>
 </html>
