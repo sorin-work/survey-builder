@@ -116,3 +116,11 @@ def test_numbers_are_not_prefixed(owner, db):
     survey = make_published_survey(owner, [[("nps", "Score", {})]], title="Numbers")
     add_response(survey, {survey.questions[0]: 0})
     assert list(export_rows(survey))[1][2] == "0"
+
+
+def test_download_is_utf8_with_bom_for_excel(auth_client, owner, db):
+    survey = build(owner)
+    add_response(survey, {survey.questions[0]: "Ștefan Pătrașcu — café"})
+    resp = auth_client.get(f"/surveys/{survey.id}/results/export.csv")
+    assert resp.data.startswith(b"\xef\xbb\xbf")
+    assert "Ștefan Pătrașcu — café" in resp.data.decode("utf-8-sig")

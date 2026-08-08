@@ -123,8 +123,10 @@ def export_filename(survey) -> str:
 @bp.get("/export.csv")
 def export_csv(survey_id: int):
     survey = get_owned_survey(survey_id)
+    # The BOM makes Excel read the file as UTF-8 instead of the local code page.
+    body = "\ufeff" + to_csv(survey, ResponseFilter.from_args(request.args))
     return HttpResponse(
-        to_csv(survey, ResponseFilter.from_args(request.args)),
+        body.encode("utf-8"),
         mimetype="text/csv",
         headers={"Content-Disposition": f'attachment; filename="{export_filename(survey)}"'},
     )
