@@ -15,8 +15,15 @@ MIN_PASSWORD_LENGTH = 8
 
 
 @login_manager.user_loader
-def load_user(user_id: str) -> User | None:
-    return db.session.get(User, int(user_id))
+def load_user(session_id: str) -> User | None:
+    user_id, _, version = session_id.partition(":")
+    try:
+        user = db.session.get(User, int(user_id))
+    except ValueError:
+        return None
+    if user is None or str(user.session_version or 1) != (version or "1"):
+        return None
+    return user
 
 
 def normalize_email(email: str) -> str:

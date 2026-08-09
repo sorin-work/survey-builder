@@ -21,6 +21,9 @@ class User(UserMixin, db.Model):
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     name: Mapped[str] = mapped_column(String(120))
     password_hash: Mapped[str] = mapped_column(String(255))
+    # Part of the id stored in session and remember-me cookies; bumping it
+    # signs the user out everywhere.
+    session_version: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
     surveys: Mapped[list["Survey"]] = relationship(
@@ -33,6 +36,9 @@ class User(UserMixin, db.Model):
 
     def check_password(self, password: str) -> bool:
         return check_password_hash(self.password_hash, password)
+
+    def get_id(self) -> str:
+        return f"{self.id}:{self.session_version or 1}"
 
     def __repr__(self) -> str:
         return f"<User {self.email}>"

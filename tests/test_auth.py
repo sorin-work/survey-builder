@@ -21,7 +21,7 @@ def test_register_creates_user_and_logs_in(client, db):
     assert user.email == "ana@example.com"
     assert user.check_password("s3cret-pass")
     with client.session_transaction() as sess:
-        assert sess["_user_id"] == str(user.id)
+        assert sess["_user_id"] == f"{user.id}:1"
 
 
 def test_register_rejects_duplicate_email(client, db):
@@ -100,3 +100,11 @@ def test_successful_login_resets_the_counter(client):
             client.post("/login", data={"email": "ana@example.com", "password": "x"}).status_code
             == 401
         )
+
+
+def test_stale_session_version_is_signed_out(client, db):
+    register(client)
+    user = db.session.query(User).one()
+    user.session_version = 2
+    db.session.commit()
+    assert client.get("/surveys/").status_code == 302
