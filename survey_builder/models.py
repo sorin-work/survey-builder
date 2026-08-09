@@ -2,7 +2,7 @@ from datetime import UTC, date, datetime
 
 from flask import current_app
 from flask_login import UserMixin
-from sqlalchemy import JSON, Boolean, Date, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import JSON, Boolean, Date, DateTime, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -159,6 +159,7 @@ class Response(db.Model):
     """One respondent's pass through a survey. Respondents are anonymous."""
 
     __tablename__ = "responses"
+    __table_args__ = (Index("ix_responses_survey_completed", "survey_id", "completed_at"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     survey_id: Mapped[int] = mapped_column(ForeignKey("surveys.id", ondelete="CASCADE"), index=True)
@@ -188,7 +189,9 @@ class Answer(db.Model):
     question_id: Mapped[int] = mapped_column(
         ForeignKey("questions.id", ondelete="CASCADE"), index=True
     )
-    choice_id: Mapped[int | None] = mapped_column(ForeignKey("choices.id", ondelete="CASCADE"))
+    choice_id: Mapped[int | None] = mapped_column(
+        ForeignKey("choices.id", ondelete="CASCADE"), index=True
+    )
     text_value: Mapped[str | None] = mapped_column(Text)
     number_value: Mapped[int | None] = mapped_column(Integer)
     date_value: Mapped[date | None] = mapped_column(Date)
