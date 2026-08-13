@@ -78,3 +78,15 @@ def test_delete_account_removes_surveys(auth_client, owner, db):
 def test_delete_account_needs_password(auth_client, db):
     auth_client.post("/account/delete", data={"password": "wrong"})
     assert db.session.query(User).count() == 1
+
+
+def test_changing_password_signs_out_other_devices(auth_client, owner, db):
+    from factories import login
+
+    other_device = auth_client.application.test_client()
+    login(other_device, owner)
+    assert other_device.get("/surveys/").status_code == 200
+
+    assert change(auth_client).status_code == 302
+    assert auth_client.get("/surveys/").status_code == 200
+    assert other_device.get("/surveys/").status_code == 302

@@ -1,7 +1,7 @@
 """The signed-in owner's own account."""
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
-from flask_login import current_user, login_required, logout_user
+from flask_login import current_user, login_required, login_user, logout_user
 from sqlalchemy import select
 
 from .auth import EMAIL_RE, MIN_PASSWORD_LENGTH, normalize_email
@@ -60,9 +60,13 @@ def password():
         elif new != confirm:
             errors["confirm_password"] = "The two passwords do not match."
         if not errors:
-            current_user.set_password(new)
+            user = db.session.get(User, current_user.id)
+            user.set_password(new)
+            # Sign out every other browser, then sign this one back in.
+            user.session_version = (user.session_version or 1) + 1
             db.session.commit()
-            flash("Your password was changed.", "success")
+            login_user(user)
+            flash("Your password was changed. Other devices have been signed out.", "success")
             return redirect(url_for("account.profile"))
     status = 422 if errors else 200
     return render_template("account/password.html", errors=errors), status
