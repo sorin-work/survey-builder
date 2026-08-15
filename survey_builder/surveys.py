@@ -105,18 +105,19 @@ def dashboard():
     if sort not in SORTS:
         sort = "updated"
     surveys = db.session.scalars(stmt.order_by(SORTS[sort][1], Survey.id.desc())).all()
-    counts = dict(
-        db.session.execute(
-            select(Response.survey_id, db.func.count(Response.id))
-            .join(Survey)
-            .where(Survey.owner_id == current_user.id, Response.completed_at.is_not(None))
-            .group_by(Response.survey_id)
-        ).all()
-    )
+    stats = db.session.execute(
+        select(Response.survey_id, db.func.count(Response.id), db.func.max(Response.completed_at))
+        .join(Survey)
+        .where(Survey.owner_id == current_user.id, Response.completed_at.is_not(None))
+        .group_by(Response.survey_id)
+    ).all()
+    counts = {survey_id: count for survey_id, count, _ in stats}
+    last_response = {survey_id: latest for survey_id, _, latest in stats}
     return render_template(
         "surveys/dashboard.html",
         surveys=surveys,
         counts=counts,
+        last_response=last_response,
         query=query,
         status=status,
         sort=sort,

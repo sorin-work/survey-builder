@@ -37,12 +37,13 @@ def create_app(config: dict | None = None) -> Flask:
 
     from .domain.question_types import QUESTION_TYPES
     from .domain.settings import TEXT_FORMATS
-    from .formatting import duration, nl2br
+    from .formatting import duration, nl2br, timeago
 
     app.jinja_env.globals["QUESTION_TYPES"] = QUESTION_TYPES
     app.jinja_env.globals["TEXT_FORMATS"] = TEXT_FORMATS
     app.jinja_env.filters["duration"] = duration
     app.jinja_env.filters["nl2br"] = nl2br
+    app.jinja_env.filters["timeago"] = timeago
 
     from .domain.estimate import estimated_minutes
 

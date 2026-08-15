@@ -25,3 +25,18 @@ def test_nl2br_escapes_html():
     assert (
         html == "&lt;img src=x onerror=&#34;alert(1)&#34;&gt;<br>&lt;b&gt;bold&lt;/b&gt; &amp; co"
     )
+
+
+def test_timeago():
+    from datetime import datetime, timedelta
+
+    from survey_builder.formatting import timeago
+
+    now = datetime(2026, 8, 15, 12, 0)
+    assert timeago(now - timedelta(seconds=30), now) == "just now"
+    assert timeago(now - timedelta(minutes=1), now) == "1 minute ago"
+    assert timeago(now - timedelta(minutes=59), now) == "59 minutes ago"
+    assert timeago(now - timedelta(hours=5), now) == "5 hours ago"
+    assert timeago(now - timedelta(days=2), now) == "2 days ago"
+    assert timeago(datetime(2026, 1, 3), now) == "on 2026-01-03"
+    assert timeago(None) == ""

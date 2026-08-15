@@ -24,3 +24,21 @@ def nl2br(text: str | None) -> Markup:
     lines = text.replace("\r\n", "\n").split("\n")
     # Respondent text is untrusted: escape every line, only the <br> is markup.
     return Markup("<br>").join(escape(line) for line in lines)
+
+
+def timeago(moment, now=None) -> str:
+    """'just now', '5 minutes ago', '3 hours ago', '2 days ago' or a date."""
+    from datetime import UTC, datetime
+
+    if moment is None:
+        return ""
+    now = now or datetime.now(UTC).replace(tzinfo=None)
+    seconds = int((now - moment).total_seconds())
+    if seconds < 60:
+        return "just now"
+    for unit, size in (("minute", 60), ("hour", 3600), ("day", 86400)):
+        limit = {"minute": 3600, "hour": 86400, "day": 86400 * 30}[unit]
+        if seconds < limit:
+            value = seconds // size
+            return f"{value} {unit}{'s' if value != 1 else ''} ago"
+    return f"on {moment.strftime('%Y-%m-%d')}"
