@@ -173,6 +173,9 @@ def show(token: str):
         return redirect(url_for("public.thanks", token=token))
     page = current_page(survey, state)
     values = saved_values(find_response(survey, state), page)
+    draft = state.get("drafts", {}).get(str(page.id))
+    if draft:
+        values = {int(qid): raw for qid, raw in draft.items()}
     return render_page(survey, page, values, can_go_back=bool(state.get("history")))
 
 
@@ -203,6 +206,7 @@ def submit(token: str):
         db.session.add(response)
         state["key"] = response.key
     store_answers(response, page, parsed)
+    state.get("drafts", {}).pop(str(page.id), None)
 
     following = next_page(survey, page, parsed)
     if following is None:
@@ -226,6 +230,11 @@ def back(token: str):
     state = load_state(survey)
     history = list(state.get("history", []))
     if history and not state.get("done"):
+        # Keep what was typed on this page (valid or not) for when they return.
+        page = current_page(survey, state)
+        drafts = dict(state.get("drafts", {}))
+        drafts[str(page.id)] = {str(q.id): request.form.getlist(f"q{q.id}") for q in page.questions}
+        state["drafts"] = drafts
         state["page_id"] = history.pop()
         state["history"] = history
         save_state(survey, state)

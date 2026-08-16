@@ -252,3 +252,17 @@ def test_answers_on_pages_skipped_after_going_back_are_dropped(client, owner, db
     assert response.is_complete
     stored = {a.question_id for a in response.answers}
     assert stored == {own.id, comments.id}
+
+
+def test_back_keeps_what_was_typed_on_the_current_page(client, owner, db):
+    survey = two_page_survey(owner)
+    page1, page2, name, _, nps, visited = ids(survey)
+    url = f"/s/{survey.share_token}"
+    client.post(url, data={"page_id": page1.id, f"q{name.id}": "Ana"})
+    client.post(
+        f"{url}/back", data={"page_id": page2.id, f"q{nps.id}": "8", f"q{visited.id}": "2026-08-01"}
+    )
+    client.post(url, data={"page_id": page1.id, f"q{name.id}": "Ana"})
+    html = client.get(url).get_data(as_text=True)
+    assert 'value="2026-08-01"' in html
+    assert 'value="8" checked' in html
