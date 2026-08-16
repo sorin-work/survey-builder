@@ -7,6 +7,20 @@ from . import models  # noqa: F401  (register models with SQLAlchemy)
 from .config import load_config
 from .extensions import csrf, db, login_manager, migrate
 
+# Everything is served from our own origin. Inline handlers (confirm dialogs)
+# and the per-survey accent <style> still need 'unsafe-inline'.
+CONTENT_SECURITY_POLICY = "; ".join(
+    [
+        "default-src 'self'",
+        "script-src 'self' 'unsafe-inline'",
+        "style-src 'self' 'unsafe-inline'",
+        "img-src 'self' data:",
+        "object-src 'none'",
+        "base-uri 'self'",
+        "form-action 'self'",
+    ]
+)
+
 
 def create_app(config: dict | None = None) -> Flask:
     app = Flask(__name__)
@@ -63,6 +77,7 @@ def create_app(config: dict | None = None) -> Flask:
         if not g.get("allow_framing"):
             response.headers.setdefault("X-Frame-Options", "DENY")
         response.headers.setdefault("Referrer-Policy", "same-origin")
+        response.headers.setdefault("Content-Security-Policy", CONTENT_SECURITY_POLICY)
         return response
 
     @app.get("/")

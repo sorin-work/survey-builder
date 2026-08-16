@@ -33,3 +33,9 @@ def test_security_headers(client):
 def test_static_assets_are_served(client):
     for path in ("css/app.css", "img/favicon.svg", "vendor/htmx.min.js", "vendor/chart.umd.min.js"):
         assert client.get(f"/static/{path}").status_code == 200
+
+
+def test_content_security_policy(client):
+    policy = client.get("/").headers["Content-Security-Policy"]
+    assert "default-src 'self'" in policy
+    assert "object-src 'none'" in policy
