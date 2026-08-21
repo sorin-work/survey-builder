@@ -72,6 +72,7 @@ Without `DATABASE_URL` the app uses a local SQLite file.
 | `WEB_PORT`       | `4416`                      | Host port used by docker compose                  |
 | `WEB_CONCURRENCY`| `2`                         | Gunicorn workers in the container                 |
 | `LOG_LEVEL`      | `info`                      | Log level; every request is logged with its id    |
+| `TRUSTED_PROXIES`| `0`                         | Number of reverse proxies whose `X-Forwarded-*` headers to trust |
 
 ## Embedding a survey
 

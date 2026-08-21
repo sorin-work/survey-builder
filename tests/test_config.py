@@ -38,3 +38,32 @@ def test_embedding_needs_cross_site_cookies(monkeypatch):
     config = load_config()
     assert config["SESSION_COOKIE_SAMESITE"] == "None"
     assert config["SESSION_COOKIE_SECURE"] is True
+
+
+def _external_url(trusted_proxies):
+    from flask import url_for
+
+    from survey_builder import create_app
+
+    app = create_app(
+        {
+            "TESTING": True,
+            "SQLALCHEMY_DATABASE_URI": "sqlite://",
+            "TRUSTED_PROXIES": trusted_proxies,
+        }
+    )
+
+    @app.get("/where")
+    def where():
+        return url_for("public.show", token="abc", _external=True)
+
+    headers = {"X-Forwarded-Proto": "https", "X-Forwarded-Host": "surveys.example.com"}
+    return app.test_client().get("/where", headers=headers).get_data(as_text=True)
+
+
+def test_forwarded_headers_are_ignored_by_default():
+    assert _external_url(0) == "http://localhost/s/abc"
+
+
+def test_trusted_proxy_makes_share_links_https():
+    assert _external_url(1) == "https://surveys.example.com/s/abc"

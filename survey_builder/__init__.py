@@ -2,6 +2,7 @@ from flask import Flask, g, redirect, render_template, url_for
 from flask_login import current_user
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from . import models  # noqa: F401  (register models with SQLAlchemy)
 from .config import load_config
@@ -27,6 +28,13 @@ def create_app(config: dict | None = None) -> Flask:
     app.config.from_mapping(load_config())
     if config:
         app.config.update(config)
+
+    proxies = int(app.config.get("TRUSTED_PROXIES", 0) or 0)
+    if proxies:
+        # Trust X-Forwarded-* from that many proxies, so share links get https.
+        app.wsgi_app = ProxyFix(
+            app.wsgi_app, x_for=proxies, x_proto=proxies, x_host=proxies, x_prefix=proxies
+        )
 
     db.init_app(app)
     migrate.init_app(app, db)

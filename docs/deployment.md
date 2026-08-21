@@ -27,6 +27,10 @@ location / {
 }
 ```
 
+Set `TRUSTED_PROXIES=1` so the app trusts the proxy's `X-Forwarded-*` headers;
+without it share links are generated with `http://` even when the site is
+served over HTTPS.
+
 The `X-Request-ID` header is echoed back and written to the request log, which
 makes it easy to match proxy and app logs.
 
