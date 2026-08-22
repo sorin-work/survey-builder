@@ -1,4 +1,4 @@
-from factories import make_published_survey
+from factories import add_skip_rule, make_published_survey
 
 from survey_builder.models import Answer, Response
 
@@ -117,8 +117,6 @@ def test_back_on_first_page_does_nothing(client, owner):
 
 
 def test_branch_rule_skips_a_page(client, owner, db):
-    from survey_builder.models import BranchRule
-
     survey = make_published_survey(
         owner,
         [
@@ -129,8 +127,7 @@ def test_branch_rule_skips_a_page(client, owner, db):
     )
     first, second, third = survey.pages
     own = first.questions[0]
-    own.branch_rules = [BranchRule(choice=own.choices[1], target_page=third)]
-    db.session.commit()
+    add_skip_rule(own, "No", third)
     url = f"/s/{survey.share_token}"
 
     client.post(url, data={"page_id": first.id, f"q{own.id}": own.choices[1].id})
@@ -140,12 +137,9 @@ def test_branch_rule_skips_a_page(client, owner, db):
 
 
 def test_branch_rule_can_end_the_survey_early(client, owner, db):
-    from survey_builder.models import BranchRule
-
     survey = two_page_survey(owner)
     page1, _, name, pets, *_ = ids(survey)
-    pets.branch_rules = [BranchRule(choice=pets.choices[2])]
-    db.session.commit()
+    add_skip_rule(pets, "Fish")
     resp = client.post(
         f"/s/{survey.share_token}",
         data={"page_id": page1.id, f"q{name.id}": "Ana", f"q{pets.id}": pets.choices[2].id},
@@ -221,8 +215,6 @@ def test_again_is_not_available_without_kiosk_mode(client, owner):
 
 
 def test_answers_on_pages_skipped_after_going_back_are_dropped(client, owner, db):
-    from survey_builder.models import BranchRule
-
     survey = make_published_survey(
         owner,
         [
@@ -237,8 +229,7 @@ def test_answers_on_pages_skipped_after_going_back_are_dropped(client, owner, db
     yes, no = own.choices
     pet_name = second.questions[0]
     comments = third.questions[0]
-    own.branch_rules = [BranchRule(choice=no, target_page=third)]
-    db.session.commit()
+    add_skip_rule(own, "No", third)
     url = f"/s/{survey.share_token}"
 
     client.post(url, data={"page_id": first.id, f"q{own.id}": yes.id})

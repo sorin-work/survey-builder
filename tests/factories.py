@@ -73,3 +73,13 @@ def add_response(survey: Survey, answers: dict, completed=True, when=None):
     db.session.add(response)
     db.session.commit()
     return response
+
+
+def add_skip_rule(question, choice_label: str, target_page=None):
+    """``question`` answered with ``choice_label`` jumps to ``target_page``
+    (or ends the survey when no page is given)."""
+    from survey_builder.models import BranchRule
+
+    choice = next(c for c in question.choices if c.label == choice_label)
+    question.branch_rules.append(BranchRule(choice=choice, target_page=target_page))
+    db.session.commit()
