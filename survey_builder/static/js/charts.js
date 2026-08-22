@@ -37,4 +37,14 @@
   }
 
   document.querySelectorAll("canvas[data-chart]").forEach(render);
+
+  // "Save as image" links next to charts.
+  document.addEventListener("click", (event) => {
+    const link = event.target.closest("[data-download-chart]");
+    if (!link) return;
+    const canvas = link.closest(".result, .card").querySelector("canvas[data-chart]");
+    if (!canvas) return;
+    link.href = canvas.toDataURL("image/png");
+    link.download = (link.dataset.downloadChart || "chart") + ".png";
+  });
 })();

@@ -883,3 +883,14 @@ body.embedded {
 body.embedded .container {
   padding: 0.5rem;
 }
+
+.chart-download {
+  display: inline-block;
+  margin-bottom: 0.5rem;
+}
+
+@media print {
+  .chart-download {
+    display: none;
+  }
+}

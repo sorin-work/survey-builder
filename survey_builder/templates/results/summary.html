@@ -81,6 +81,7 @@
                                     "labels": summary.labels, "counts": summary.counts}|tojson }}'
                     aria-label="Chart of answers to {{ question.prompt }}" role="img"></canvas>
           </div>
+          <a class="muted small chart-download" href="#" data-download-chart="question-{{ question.id }}">Save chart as image</a>
           {% if summary.nps and summary.nps.total %}
             <div class="nps">
               <div class="nps-score"><span class="stat-value">{{ summary.nps.score }}</span><span class="muted">NPS</span></div>

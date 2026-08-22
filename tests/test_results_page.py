@@ -147,3 +147,10 @@ def test_skipped_counts_are_shown(auth_client, owner):
     add_response(survey, {plan: "Pro"})
     html = auth_client.get(f"/surveys/{survey.id}/results/").get_data(as_text=True)
     assert "1 answered, 1 skipped" in html
+
+
+def test_charts_can_be_saved_as_images(auth_client, owner):
+    survey = build(owner)
+    add_response(survey, {survey.questions[0]: "Free"})
+    html = auth_client.get(f"/surveys/{survey.id}/results/").get_data(as_text=True)
+    assert f'data-download-chart="question-{survey.questions[0].id}"' in html
