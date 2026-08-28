@@ -23,6 +23,9 @@ services:
       DATABASE_URL: postgresql://surveys:surveys@db:5432/surveys
       SECRET_KEY: ${SECRET_KEY:-local-development-secret-change-me}
       LOG_LEVEL: ${LOG_LEVEL:-info}
+      # Behind an HTTPS reverse proxy set these to 1 and true.
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-0}
+      SECURE_COOKIES: ${SECURE_COOKIES:-false}
       # Creates demo@example.com / demo-password with sample surveys.
       SEED_DEMO: ${SEED_DEMO:-true}
     depends_on:
