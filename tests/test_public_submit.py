@@ -257,3 +257,22 @@ def test_back_keeps_what_was_typed_on_the_current_page(client, owner, db):
     html = client.get(url).get_data(as_text=True)
     assert 'value="2026-08-01"' in html
     assert 'value="8" checked' in html
+
+
+def test_double_submit_of_the_first_page_records_one_response(client, owner, db):
+    survey = make_published_survey(owner, title="Double click")
+    page = survey.pages[0]
+    question = survey.questions[0]
+    url = f"/s/{survey.share_token}"
+    client.get(url)
+    cookie = client.get_cookie("session")
+
+    # A second request sent with the same cookie before the first one returned.
+    twin = client.application.test_client()
+    twin.set_cookie("session", cookie.value)
+    data = {"page_id": page.id, f"q{question.id}": "Ana"}
+    client.post(url, data=data)
+    twin.post(url, data=data)
+
+    assert db.session.query(Response).count() == 1
+    assert db.session.query(Answer).count() == 1

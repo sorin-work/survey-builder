@@ -10,6 +10,7 @@ import secrets
 
 from flask import Blueprint, abort, g, redirect, render_template, request, session, url_for
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 
 from .domain import sharing
 from .domain.answers import parse_page
@@ -132,8 +133,11 @@ def render_page(
     survey: Survey, page: Page, values=None, errors=None, status=200, can_go_back=False
 ):
     state = load_state(survey)
-    if "seed" not in state:
-        state["seed"] = secrets.token_hex(8)
+    if "seed" not in state or "key" not in state:
+        state.setdefault("seed", secrets.token_hex(8))
+        # The response key is fixed before the first submit, so a double
+        # click sends the same key twice instead of starting two responses.
+        state.setdefault("key", secrets.token_hex(16))
         save_state(survey, state)
     html = render_template(
         "public/page.html",
@@ -187,9 +191,9 @@ def submit(token: str):
 
     response = find_response(survey, state)
     if response is None:
-        response = Response(survey=survey, key=secrets.token_hex(16))
+        state.setdefault("key", secrets.token_hex(16))
+        response = Response(survey=survey, key=state["key"])
         db.session.add(response)
-        state["key"] = response.key
     store_answers(response, page, parsed)
     state.get("drafts", {}).pop(str(page.id), None)
 
@@ -201,7 +205,12 @@ def submit(token: str):
     else:
         state["page_id"] = following.id
         state["history"] = [*state.get("history", []), page.id]
-    db.session.commit()
+    try:
+        db.session.commit()
+    except IntegrityError:
+        # The same submission is being saved by a parallel request.
+        db.session.rollback()
+        return redirect(url_for("public.show", token=token))
     save_state(survey, state)
 
     if state.get("done"):
