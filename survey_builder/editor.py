@@ -5,12 +5,15 @@ plain form posts with a redirect back to the editor, so the editor keeps
 working without JavaScript.
 """
 
+import secrets
+
 from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
 from flask_login import login_required
 
 from .domain import sharing
 from .domain.answers import parse_page
 from .domain.branching import prune_invalid_rules, valid_targets
+from .domain.ordering import choice_order
 from .domain.question_form import PROMPT_MAX, parse_bulk_choices, parse_question_form
 from .domain.question_types import default_settings, get_type
 from .domain.results import completed_response_count
@@ -342,6 +345,8 @@ def preview(survey_id: int):
         values=values,
         errors=errors,
         preview=True,
+        # A fresh order each time, so the owner sees what shuffling does.
+        choice_order=choice_order(page, secrets.token_hex(4)),
     ), (422 if errors else 200)
 
 

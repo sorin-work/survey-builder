@@ -39,3 +39,19 @@ def test_preview_clamps_page_number(auth_client, owner):
     survey = survey_for(owner)
     resp = auth_client.get(f"/surveys/{survey.id}/preview?page=99")
     assert b"Page 2 of 2" in resp.data
+
+
+def test_preview_shows_shuffled_options(auth_client, owner):
+    import re
+
+    labels = [f"Option {i}" for i in range(12)]
+    survey = make_published_survey(
+        owner,
+        [[("single_choice", "Pick", {"choices": labels, "settings": {"shuffle": True}})]],
+        title="Shuffle preview",
+    )
+    orders = set()
+    for _ in range(4):
+        html = auth_client.get(f"/surveys/{survey.id}/preview").get_data(as_text=True)
+        orders.add(tuple(re.findall(r"(Option \d+)\n", html)))
+    assert any(order != tuple(labels) for order in orders)
