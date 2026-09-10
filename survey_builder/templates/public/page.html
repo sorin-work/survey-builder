@@ -37,7 +37,7 @@
         <button class="btn btn-secondary" type="submit" formaction="{{ url_for('public.back', token=survey.share_token) }}"
                 formnovalidate>Back</button>
       {% endif %}
-      <button class="btn" type="submit">{{ "Submit" if page_number == survey.pages|length else "Next" }}</button>
+      <button class="btn" type="submit" data-busy-label="Sending&hellip;">{{ "Submit" if page_number == survey.pages|length else "Next" }}</button>
     </div>
   </form>
 {% endblock %}

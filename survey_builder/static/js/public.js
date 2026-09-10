@@ -20,3 +20,16 @@ if (firstError) {
   const input = firstError.querySelector("input, textarea, select");
   if (input) input.focus({ preventScroll: true });
 }
+
+// Disable the buttons once the form is on its way, so a double click does not
+// send it twice.
+document.querySelectorAll("form").forEach((form) => {
+  form.addEventListener("submit", (event) => {
+    const clicked = event.submitter;
+    form.querySelectorAll("button[type=submit]").forEach((button) => {
+      // Keep the clicked button's name/formaction: disable on the next tick.
+      setTimeout(() => (button.disabled = true), 0);
+    });
+    if (clicked && clicked.dataset.busyLabel) clicked.textContent = clicked.dataset.busyLabel;
+  });
+});
