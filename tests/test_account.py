@@ -90,3 +90,14 @@ def test_changing_password_signs_out_other_devices(auth_client, owner, db):
     assert change(auth_client).status_code == 302
     assert auth_client.get("/surveys/").status_code == 200
     assert other_device.get("/surveys/").status_code == 302
+
+
+def test_profile_shows_totals(auth_client, owner):
+    from factories import add_response, make_published_survey
+
+    survey = make_published_survey(owner)
+    add_response(survey, {survey.questions[0]: "x"})
+    add_response(survey, {survey.questions[0]: "y"}, completed=False)
+    html = auth_client.get("/account/").get_data(as_text=True)
+    assert "1 survey &middot;" in html
+    assert "1 response collected" in html

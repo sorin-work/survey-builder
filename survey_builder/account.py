@@ -6,7 +6,7 @@ from sqlalchemy import select
 
 from .auth import EMAIL_RE, MIN_PASSWORD_LENGTH, normalize_email
 from .extensions import db
-from .models import User
+from .models import Response, Survey, User
 
 bp = Blueprint("account", __name__, url_prefix="/account")
 
@@ -43,7 +43,17 @@ def profile():
             flash("Your profile was updated.", "success")
             return redirect(url_for("account.profile"))
     status = 422 if errors else 200
-    return render_template("account/profile.html", form=form, errors=errors), status
+    stats = {
+        "surveys": db.session.scalar(
+            select(db.func.count(Survey.id)).where(Survey.owner_id == current_user.id)
+        ),
+        "responses": db.session.scalar(
+            select(db.func.count(Response.id))
+            .join(Survey)
+            .where(Survey.owner_id == current_user.id, Response.completed_at.is_not(None))
+        ),
+    }
+    return render_template("account/profile.html", form=form, errors=errors, stats=stats), status
 
 
 @bp.route("/password", methods=["GET", "POST"])

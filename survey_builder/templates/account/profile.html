@@ -3,6 +3,9 @@
 {% block content %}
   <section class="card narrow">
     <h1>Your account</h1>
+    <p class="muted">Member since {{ current_user.created_at.strftime("%B %Y") }} &middot;
+      {{ stats.surveys }} survey{{ "" if stats.surveys == 1 else "s" }} &middot;
+      {{ stats.responses }} response{{ "" if stats.responses == 1 else "s" }} collected</p>
     <form method="post" novalidate>
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="field">
