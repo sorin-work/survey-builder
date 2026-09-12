@@ -46,6 +46,27 @@ def get_survey_response(survey, response_id: int) -> Response:
     return response
 
 
+def neighbours(survey, response) -> tuple[int | None, int | None]:
+    """Ids of the next newer and next older completed response, as listed."""
+    if response.completed_at is None:
+        return None, None
+    base = select(Response.id).where(
+        Response.survey_id == survey.id, Response.completed_at.is_not(None)
+    )
+    key = (Response.completed_at, Response.id)
+    newer = db.session.scalar(
+        base.where(db.tuple_(*key) > db.tuple_(response.completed_at, response.id))
+        .order_by(Response.completed_at, Response.id)
+        .limit(1)
+    )
+    older = db.session.scalar(
+        base.where(db.tuple_(*key) < db.tuple_(response.completed_at, response.id))
+        .order_by(Response.completed_at.desc(), Response.id.desc())
+        .limit(1)
+    )
+    return newer, older
+
+
 @bp.get("/")
 def summary(survey_id: int):
     survey = get_owned_survey(survey_id, with_tree=True)
@@ -100,8 +121,14 @@ def response_detail(survey_id: int, response_id: int):
     by_question: dict[int, list] = {}
     for answer in response.answers:
         by_question.setdefault(answer.question_id, []).append(answer)
+    newer, older = neighbours(survey, response)
     return render_template(
-        "results/response.html", survey=survey, response=response, by_question=by_question
+        "results/response.html",
+        survey=survey,
+        response=response,
+        by_question=by_question,
+        newer=newer,
+        older=older,
     )
 
 

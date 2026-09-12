@@ -17,6 +17,11 @@
     </form>
   </div>
 
+  <nav class="pager">
+    {% if newer %}<a href="{{ url_for('results.response_detail', survey_id=survey.id, response_id=newer) }}">&larr; Newer</a>{% endif %}
+    {% if older %}<a href="{{ url_for('results.response_detail', survey_id=survey.id, response_id=older) }}">Older &rarr;</a>{% endif %}
+  </nav>
+
   {% for page in survey.pages %}
     <section class="card">
       {% if page.title %}<h2>{{ page.title }}</h2>{% endif %}

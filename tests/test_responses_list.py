@@ -141,3 +141,29 @@ def test_cannot_clear_responses_of_foreign_survey(auth_client, db):
     survey = make_published_survey(make_user("other@example.com"))
     resp = auth_client.post(f"/surveys/{survey.id}/results/clear", data={"confirm": survey.title})
     assert resp.status_code == 404
+
+
+def test_response_detail_links_to_neighbours(auth_client, owner):
+    from datetime import datetime
+
+    survey = make_published_survey(owner)
+    question = survey.questions[0]
+    same_time = datetime(2026, 9, 1, 12)
+    first = add_response(survey, {question: "a"}, when=datetime(2026, 9, 1, 9))
+    second = add_response(survey, {question: "b"}, when=same_time)
+    third = add_response(survey, {question: "c"}, when=same_time)
+    add_response(survey, {question: "draft"}, completed=False)
+
+    def links(response):
+        html = auth_client.get(f"/surveys/{survey.id}/results/responses/{response.id}").get_data(
+            as_text=True
+        )
+        return html
+
+    html = links(second)
+    assert f'responses/{third.id}">&larr; Newer' in html
+    assert f'responses/{first.id}">Older &rarr;' in html
+    html = links(first)
+    assert "Older &rarr;" not in html
+    html = links(third)
+    assert "&larr; Newer" not in html
