@@ -1,6 +1,6 @@
 """The signed-in owner's own account."""
 
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 from sqlalchemy import select
 
@@ -93,3 +93,36 @@ def delete():
     db.session.commit()
     flash("Your account and all of your surveys were deleted.", "success")
     return redirect(url_for("index"))
+
+
+@bp.get("/export.json")
+def export_data():
+    """Everything stored about the signed-in owner, as one JSON document."""
+    from .api import survey_json
+    from .domain.export import export_rows
+
+    surveys = db.session.scalars(
+        select(Survey).filter_by(owner_id=current_user.id).order_by(Survey.id)
+    ).all()
+    payload = {
+        "account": {
+            "name": current_user.name,
+            "email": current_user.email,
+            "created_at": current_user.created_at.isoformat() + "Z",
+        },
+        "surveys": [],
+    }
+    for survey in surveys:
+        header, *rows = list(export_rows(survey))
+        payload["surveys"].append(
+            {
+                **survey_json(survey),
+                "questions": [
+                    {"id": q.id, "type": q.type, "prompt": q.prompt} for q in survey.questions
+                ],
+                "responses": [dict(zip(header, row, strict=True)) for row in rows],
+            }
+        )
+    response = jsonify(payload)
+    response.headers["Content-Disposition"] = 'attachment; filename="survey-builder-export.json"'
+    return response

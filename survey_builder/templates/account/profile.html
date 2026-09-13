@@ -20,7 +20,8 @@
       </div>
       <button class="btn" type="submit">Save</button>
     </form>
-    <p><a href="{{ url_for('account.password') }}">Change your password</a></p>
+    <p><a href="{{ url_for('account.password') }}">Change your password</a> &middot;
+      <a href="{{ url_for('account.export_data') }}">Download all your data</a></p>
   </section>
   <section class="card narrow danger-zone">
     <h2>Delete account</h2>

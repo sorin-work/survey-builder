@@ -101,3 +101,18 @@ def test_profile_shows_totals(auth_client, owner):
     html = auth_client.get("/account/").get_data(as_text=True)
     assert "1 survey &middot;" in html
     assert "1 response collected" in html
+
+
+def test_export_all_data(auth_client, owner):
+    from factories import add_response, make_published_survey
+
+    survey = make_published_survey(owner)
+    add_response(survey, {survey.questions[0]: "Ana"})
+    resp = auth_client.get("/account/export.json")
+    assert resp.status_code == 200
+    assert "attachment" in resp.headers["Content-Disposition"]
+    data = resp.get_json()
+    assert data["account"]["email"] == owner.email
+    (exported,) = data["surveys"]
+    assert exported["title"] == survey.title
+    assert exported["responses"][0]["Your name"] == "Ana"
