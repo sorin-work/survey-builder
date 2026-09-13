@@ -154,8 +154,10 @@ def test_dashboard_search_and_status_filter(auth_client, owner, db):
 
 
 def test_dashboard_sorting(auth_client, owner, db):
-    for title in ("Banana", "apple", "Cherry"):
-        make_survey(owner, title=title)
+    from datetime import datetime
+
+    for day, title in enumerate(("Banana", "apple", "Cherry"), start=1):
+        make_survey(owner, title=title, created_at=datetime(2026, 9, day))
     html = auth_client.get("/surveys/?sort=title").get_data(as_text=True)
     positions = [html.index(t) for t in ("apple", "Banana", "Cherry")]
     assert positions == sorted(positions)
