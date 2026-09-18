@@ -224,6 +224,10 @@ def publish(survey_id: int):
         return redirect(url_for("editor.edit", survey_id=survey.id))
     if survey.share_token is None:
         survey.share_token = sharing.new_share_token()
+    if survey.closes_on and survey.closes_on < utcnow().date():
+        # Reopening means "accept answers again"; an old close date would undo that.
+        survey.closes_on = None
+        flash("The close date had passed, so it was removed.", "success")
     survey.status = sharing.PUBLISHED
     survey.published_at = survey.published_at or utcnow()
     db.session.commit()

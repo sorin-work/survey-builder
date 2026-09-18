@@ -75,3 +75,29 @@ def test_share_panel_shows_limit_and_close_date(auth_client, owner, db):
     html = auth_client.get(f"/surveys/{survey.id}/edit").get_data(as_text=True)
     assert "1 completed response of 10." in html
     assert "Open until the end of June 30, 2099." in html
+
+
+def test_reopening_clears_a_close_date_in_the_past(auth_client, owner, db):
+    from datetime import date
+
+    survey = with_question(db, make_survey(owner))
+    survey.status = "closed"
+    survey.share_token = "reopen"
+    survey.closes_on = date(2020, 1, 1)
+    db.session.commit()
+    resp = auth_client.post(f"/surveys/{survey.id}/publish", follow_redirects=True)
+    assert b"close date had passed" in resp.data
+    db.session.refresh(survey)
+    assert survey.status == "published" and survey.closes_on is None
+    assert auth_client.get("/s/reopen").status_code == 200
+
+
+def test_publishing_keeps_a_future_close_date(auth_client, owner, db):
+    from datetime import date
+
+    survey = with_question(db, make_survey(owner))
+    survey.closes_on = date(2099, 1, 1)
+    db.session.commit()
+    auth_client.post(f"/surveys/{survey.id}/publish")
+    db.session.refresh(survey)
+    assert survey.closes_on == date(2099, 1, 1)
