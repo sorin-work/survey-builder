@@ -12,7 +12,7 @@ from flask_login import login_required
 
 from .domain import sharing
 from .domain.answers import parse_page
-from .domain.branching import prune_invalid_rules, valid_targets
+from .domain.branching import prune_invalid_rules, unreachable_pages, valid_targets
 from .domain.ordering import choice_order
 from .domain.question_form import PROMPT_MAX, parse_bulk_choices, parse_question_form
 from .domain.question_types import default_settings, get_type
@@ -77,6 +77,7 @@ def edit(survey_id: int):
         survey=survey,
         closed_reason=sharing.closed_reason(survey),
         completed=completed_response_count(survey),
+        unreachable={page.id for page in unreachable_pages(survey)},
     )
 
 

@@ -18,6 +18,9 @@
       <button class="link danger" type="submit">Delete page</button>
     </form>
   </div>
+  {% if unreachable is defined and page.id in unreachable %}
+    <p class="flash flash-error small">Nobody can reach this page: the skip rules before it always jump past it.</p>
+  {% endif %}
   <div class="questions" id="questions-{{ page.id }}">
     {% for question in page.questions %}
       {% include "editor/_question.html" %}

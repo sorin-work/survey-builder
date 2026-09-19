@@ -69,3 +69,32 @@ def test_valid_targets_are_later_pages(owner, db):
     first, second, third = survey.pages
     assert valid_targets(survey, first) == [second, third]
     assert valid_targets(survey, third) == []
+
+
+def test_unreachable_pages(owner, db):
+    from survey_builder.domain.branching import unreachable_pages
+
+    survey = build(owner, db)
+    first, second, third = survey.pages
+    own = first.questions[0]
+    assert unreachable_pages(survey) == []
+
+    # Every answer jumps to page 3, but the question is optional: page 2 is still reachable.
+    own.branch_rules = [BranchRule(choice=c, target_page=third) for c in own.choices]
+    db.session.commit()
+    assert unreachable_pages(survey) == []
+
+    own.required = True
+    db.session.commit()
+    assert unreachable_pages(survey) == [second]
+
+
+def test_editor_warns_about_unreachable_pages(auth_client, owner, db):
+    survey = build(owner, db)
+    first, second, third = survey.pages
+    own = first.questions[0]
+    own.required = True
+    own.branch_rules = [BranchRule(choice=c) for c in own.choices]
+    db.session.commit()
+    html = auth_client.get(f"/surveys/{survey.id}/edit").get_data(as_text=True)
+    assert html.count("Nobody can reach this page") == 2

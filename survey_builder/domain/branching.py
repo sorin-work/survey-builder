@@ -38,3 +38,32 @@ def prune_invalid_rules(survey) -> int:
                     question.branch_rules.remove(rule)
                     removed += 1
     return removed
+
+
+def _always_jumps(page) -> bool:
+    """True when every possible answer on the page triggers a skip rule, so the
+    page right after it is never shown next."""
+    for question in page.questions:
+        if question.type != "single_choice" or not question.required or not question.choices:
+            continue
+        ruled = {rule.choice_id for rule in question.branch_rules}
+        if all(choice.id in ruled for choice in question.choices):
+            return True
+    return False
+
+
+def unreachable_pages(survey) -> list:
+    """Pages that no combination of answers leads to."""
+    if not survey.pages:
+        return []
+    reachable = {survey.pages[0].id}
+    for index, page in enumerate(survey.pages):
+        if page.id not in reachable:
+            continue
+        for question in page.questions:
+            for rule in question.branch_rules:
+                if rule.target_page_id is not None:
+                    reachable.add(rule.target_page_id)
+        if index + 1 < len(survey.pages) and not _always_jumps(page):
+            reachable.add(survey.pages[index + 1].id)
+    return [page for page in survey.pages if page.id not in reachable]
