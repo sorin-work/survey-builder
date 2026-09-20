@@ -12,6 +12,7 @@
     {% block head %}{% endblock %}
   </head>
   <body hx-headers='{"X-CSRFToken": "{{ csrf_token() }}"}'>
+    <a class="skip-link" href="#main">Skip to content</a>
     <header class="topbar">
       <a class="brand" href="{{ url_for('index') }}">Survey Builder</a>
       <nav>
@@ -28,7 +29,7 @@
         {% endif %}
       </nav>
     </header>
-    <main class="container">
+    <main class="container" id="main" tabindex="-1">
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% for category, message in messages %}
           <div class="flash flash-{{ category }}">{{ message }}</div>
