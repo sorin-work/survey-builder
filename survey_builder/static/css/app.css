@@ -950,3 +950,21 @@ h2,
     display: block;
   }
 }
+
+@media (max-width: 600px) {
+  /* Eleven NPS buttons fit on one row of a phone screen. */
+  .scale {
+    gap: 0.2rem;
+  }
+
+  .scale-point span {
+    min-width: 0;
+    width: 2.1rem;
+    padding: 0.45rem 0;
+  }
+
+  .form-nav .btn {
+    flex: 1;
+    text-align: center;
+  }
+}
