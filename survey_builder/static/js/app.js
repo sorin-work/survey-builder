@@ -25,3 +25,12 @@ window.addEventListener("beforeunload", (event) => {
     event.returnValue = "";
   }
 });
+
+// Ctrl+Enter (Cmd+Enter on macOS) saves the question being edited.
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter" || !(event.ctrlKey || event.metaKey)) return;
+  const form = event.target.closest(".question form");
+  if (!form) return;
+  event.preventDefault();
+  form.requestSubmit();
+});
