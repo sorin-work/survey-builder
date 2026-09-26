@@ -79,6 +79,7 @@ def summary(survey_id: int):
         summaries=summarize(survey, period),
         timeline=daily_counts(survey, period),
         funnel=funnel(survey, period),
+        overall=({} if period.is_open else {item.question.id: item for item in summarize(survey)}),
         nps_trends={
             q.id: nps_by_month(survey, q, period) for q in survey.questions if q.type == "nps"
         },

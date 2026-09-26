@@ -154,3 +154,16 @@ def test_charts_can_be_saved_as_images(auth_client, owner):
     add_response(survey, {survey.questions[0]: "Free"})
     html = auth_client.get(f"/surveys/{survey.id}/results/").get_data(as_text=True)
     assert f'data-download-chart="question-{survey.questions[0].id}"' in html
+
+
+def test_segment_is_compared_with_all_respondents(auth_client, owner):
+    survey = build(owner)
+    plan, rating, *_ = survey.questions
+    pro = plan.choices[1]
+    add_response(survey, {plan: "Free", rating: 1})
+    add_response(survey, {plan: "Pro", rating: 5})
+    html = auth_client.get(f"/surveys/{survey.id}/results/?choice={pro.id}").get_data(as_text=True)
+    assert "(all respondents: 3.0)" in html
+    assert "all respondents" not in auth_client.get(f"/surveys/{survey.id}/results/").get_data(
+        as_text=True
+    )

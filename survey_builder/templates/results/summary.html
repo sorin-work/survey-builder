@@ -84,7 +84,10 @@
           <a class="muted small chart-download" href="#" data-download-chart="question-{{ question.id }}">Save chart as image</a>
           {% if summary.nps and summary.nps.total %}
             <div class="nps">
-              <div class="nps-score"><span class="stat-value">{{ summary.nps.score }}</span><span class="muted">NPS</span></div>
+              <div class="nps-score"><span class="stat-value">{{ summary.nps.score }}</span><span class="muted">NPS</span>
+                {% set everyone = overall.get(question.id) %}
+                {% if everyone and everyone.nps and everyone.nps.total %}<span class="muted small">all: {{ everyone.nps.score }}</span>{% endif %}
+              </div>
               <div class="nps-groups">
                 <span class="nps-promoters">Promoters {{ summary.nps.promoters }}</span>
                 <span class="nps-passives">Passives {{ summary.nps.passives }}</span>
@@ -104,7 +107,11 @@
           {% endif %}
           {% if summary.average is not none and question.type != "nps" %}
             <p class="average">Average <strong>{{ summary.average }}</strong>,
-              median <strong>{{ summary.median|round(1) }}</strong></p>
+              median <strong>{{ summary.median|round(1) }}</strong>
+              {%- set everyone = overall.get(question.id) %}
+              {%- if everyone and everyone.average is not none %}
+                <span class="muted">(all respondents: {{ everyone.average }})</span>
+              {%- endif %}</p>
           {% endif %}
           <table class="result-table">
             <thead><tr><th>Answer</th><th class="num">Count</th>
