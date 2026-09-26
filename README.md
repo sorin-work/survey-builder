@@ -100,6 +100,15 @@ pytest
 ruff check . && ruff format --check .
 ```
 
+The suite uses an in-memory SQLite database. CI runs it a second time against
+PostgreSQL; to do the same locally:
+
+```bash
+docker run -d --name surveys-test -e POSTGRES_USER=surveys -e POSTGRES_PASSWORD=surveys \
+  -e POSTGRES_DB=surveys_test -p 55432:5432 postgres:17-alpine
+TEST_DATABASE_URL=postgresql+psycopg://surveys:surveys@localhost:55432/surveys_test pytest
+```
+
 Optional: `pip install pre-commit && pre-commit install` runs ruff on every commit.
 
 The `Makefile` wraps the usual commands: `make install`, `make dev`, `make check`,
