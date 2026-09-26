@@ -67,3 +67,24 @@ def test_responses_endpoint_paginates(auth_client, owner):
 def test_responses_endpoint_is_owner_only(auth_client):
     survey = make_published_survey(make_user("other@example.com"))
     assert auth_client.get(f"/api/surveys/{survey.id}/responses").status_code == 404
+
+
+def test_summary_accepts_period_and_segment(auth_client, owner):
+    from datetime import datetime
+
+    survey = make_published_survey(
+        owner,
+        [[("single_choice", "Plan", {"choices": ["Free", "Pro"]}), ("rating", "Ease", {})]],
+        title="Filters",
+    )
+    plan, ease = survey.questions
+    add_response(survey, {plan: "Free", ease: 2}, when=datetime(2026, 8, 1))
+    add_response(survey, {plan: "Pro", ease: 4}, when=datetime(2026, 9, 1))
+    add_response(survey, {plan: "Pro", ease: 5}, when=datetime(2026, 9, 2))
+
+    url = f"/api/surveys/{survey.id}/summary"
+    data = auth_client.get(f"{url}?from=2026-09-01").get_json()
+    assert data["responses"]["completed"] == 2
+    data = auth_client.get(f"{url}?choice={plan.choices[0].id}").get_json()
+    assert data["questions"][1]["average"] == 2.0
+    assert data["questions"][1]["median"] == 2.0
