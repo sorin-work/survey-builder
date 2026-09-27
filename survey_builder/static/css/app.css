@@ -968,3 +968,19 @@ h2,
     text-align: center;
   }
 }
+
+.flash {
+  position: relative;
+  padding-right: 2.5rem;
+}
+
+.flash-close {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.6rem;
+  border: none;
+  background: none;
+  font-size: 1.2rem;
+  color: inherit;
+  cursor: pointer;
+}

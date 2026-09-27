@@ -34,3 +34,9 @@ document.addEventListener("keydown", (event) => {
   event.preventDefault();
   form.requestSubmit();
 });
+
+// Close buttons on flash messages.
+document.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-dismiss]");
+  if (button) button.parentElement.remove();
+});

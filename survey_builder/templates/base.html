@@ -9,6 +9,7 @@
     {# htmx does not swap 4xx responses by default; ours carry the form with its errors. #}
     <meta name="htmx-config" content='{"responseHandling": [{"code": "204", "swap": false}, {"code": "[23]..", "swap": true}, {"code": "422", "swap": true}, {"code": "[45]..", "swap": false, "error": true}]}'>
     <script src="{{ url_for('static', filename='vendor/htmx.min.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
     {% block head %}{% endblock %}
   </head>
   <body hx-headers='{"X-CSRFToken": "{{ csrf_token() }}"}'>
@@ -32,7 +33,10 @@
     <main class="container" id="main" tabindex="-1">
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% for category, message in messages %}
-          <div class="flash flash-{{ category }}">{{ message }}</div>
+          <div class="flash flash-{{ category }}" role="status">
+            {{ message }}
+            <button class="flash-close" type="button" aria-label="Dismiss" data-dismiss>&times;</button>
+          </div>
         {% endfor %}
       {% endwith %}
       {% block content %}{% endblock %}
