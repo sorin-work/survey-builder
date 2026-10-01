@@ -16,7 +16,8 @@
       <a class="btn btn-secondary" href="{{ url_for('editor.preview', survey_id=survey.id) }}">Preview</a>
       <a class="btn btn-secondary" href="{{ url_for('surveys.edit', survey_id=survey.id) }}">Settings</a>
       {% if survey.status == "published" %}
-        <form method="post" action="{{ url_for('surveys.close', survey_id=survey.id) }}">
+        <form method="post" action="{{ url_for('surveys.close', survey_id=survey.id) }}"
+              onsubmit="return confirm('Close the survey? The link will stop accepting answers until you reopen it.')">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button class="btn btn-secondary" type="submit">Close survey</button>
         </form>
