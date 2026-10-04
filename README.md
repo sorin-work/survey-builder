@@ -114,6 +114,19 @@ Optional: `pip install pre-commit && pre-commit install` runs ruff on every comm
 The `Makefile` wraps the usual commands: `make install`, `make dev`, `make check`,
 `make format`, `make up`.
 
+## Troubleshooting
+
+- **"Bad request: The CSRF token is missing"** after a long break: the session
+  expired. Reload the page and submit again.
+- **Respondents of an embedded survey are stuck on page 1**: the iframe is on
+  another site and the browser drops the cookie. Set `ALLOW_EMBEDDING=true` and
+  serve the app over HTTPS.
+- **Share links start with `http://` behind a proxy**: set `TRUSTED_PROXIES=1`.
+- **`/healthz` returns 503**: the app cannot reach the database; check
+  `DATABASE_URL` and that PostgreSQL is up (`docker compose ps`).
+- **Locked out after typing the wrong password**: five failed sign-ins lock that
+  email for 15 minutes on that worker; wait or restart the app.
+
 ## License
 
 MIT
