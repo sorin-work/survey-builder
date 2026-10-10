@@ -11,14 +11,20 @@ summarised per question with charts, and every response can be exported as CSV.
 - **Question types**: short text (optionally email or number), long text, single
   choice, multiple choice, rating scales (3 to 10 points), Net Promoter Score and dates
 - **Validation**: required questions, length limits, number of choices, date ranges
-- **Pages and skip logic**: split a survey into pages and jump ahead (or end the
-  survey) depending on an answer
-- **Sharing**: a public link with an optional close date and response limit;
-  respondents stay anonymous
-- **Results**: per-question charts, averages, NPS, responses per day, completion
-  rate, every individual response, CSV export
-- **Editor**: htmx-powered, reorder and move questions, duplicate questions or
-  whole surveys, preview before publishing
+- **Pages and skip logic**: split a survey into pages, add intro text, and jump
+  ahead (or end the survey) depending on an answer; the editor warns about pages
+  nobody can reach
+- **Sharing**: a public link with an optional close date and response limit,
+  kiosk mode for several responses per device, an accent colour and an
+  embeddable view; respondents stay anonymous and can come back within a week
+- **Results**: per-question charts, averages and medians, NPS with a monthly
+  trend, responses per day, completion rate and time to complete, every
+  individual response, filters by date and by answer, CSV export and a JSON API
+- **Editor**: htmx-powered, reorder and move questions, paste options in bulk,
+  shuffle options, duplicate questions or whole surveys, start from templates,
+  preview before publishing
+- **Accounts**: email and password sign in with throttling, profile and
+  password changes (signs out other devices), data export and account deletion
 
 ## Stack
 
