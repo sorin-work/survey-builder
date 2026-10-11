@@ -124,3 +124,26 @@ def test_download_is_utf8_with_bom_for_excel(auth_client, owner, db):
     resp = auth_client.get(f"/surveys/{survey.id}/results/export.csv")
     assert resp.data.startswith(b"\xef\xbb\xbf")
     assert "Ștefan Pătrașcu — café" in resp.data.decode("utf-8-sig")
+
+
+def test_skipped_pages_export_as_empty_cells(client, owner, db):
+    from factories import add_skip_rule
+
+    survey = make_published_survey(
+        owner,
+        [
+            [("single_choice", "Own a pet?", {"choices": ["Yes", "No"]})],
+            [("short_text", "Pet name", {})],
+            [("long_text", "Comments", {})],
+        ],
+        title="Export skips",
+    )
+    first, second, third = survey.pages
+    own = first.questions[0]
+    add_skip_rule(own, "No", third)
+    url = f"/s/{survey.share_token}"
+    client.post(url, data={"page_id": first.id, f"q{own.id}": own.choices[1].id})
+    client.post(url, data={"page_id": third.id, f"q{third.questions[0].id}": "none"})
+    header, row = list(export_rows(survey))
+    assert header[2:] == ["Own a pet?", "Pet name", "Comments"]
+    assert row[2:] == ["No", "", "none"]
