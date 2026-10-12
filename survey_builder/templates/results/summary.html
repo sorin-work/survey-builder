@@ -132,7 +132,10 @@
         {% elif question.type in ("short_text", "long_text") %}
           {% if summary.texts %}
             <ul class="text-answers">
-              {% for text in summary.texts %}<li>{{ text|nl2br }}</li>{% endfor %}
+              {% for text in summary.texts %}
+                <li>{{ text|nl2br }}
+                  <a class="muted small" href="{{ url_for('results.response_detail', survey_id=survey.id, response_id=summary.text_response_ids[loop.index0]) }}">#{{ summary.text_response_ids[loop.index0] }}</a></li>
+              {% endfor %}
             </ul>
             {% if summary.answered > summary.texts|length %}
               <a href="{{ url_for('results.text_answers', survey_id=survey.id, question_id=question.id) }}">

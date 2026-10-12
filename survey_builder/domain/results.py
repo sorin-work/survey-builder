@@ -25,6 +25,7 @@ class QuestionSummary:
     average: float | None = None
     median: float | None = None
     texts: list[str] = field(default_factory=list)
+    text_response_ids: list[int] = field(default_factory=list)
     earliest: object = None
     latest: object = None
     nps: "NpsScore | None" = None
@@ -242,9 +243,10 @@ def _summarize_scale(summary: QuestionSummary, answers: list[Answer], low: int, 
 
 
 def _summarize_text(summary: QuestionSummary, answers: list[Answer]) -> None:
-    texts = [a.text_value for a in answers if a.text_value]
-    summary.answered = len(texts)
-    summary.texts = texts[:TEXT_SAMPLE_SIZE]
+    with_text = [a for a in answers if a.text_value]
+    summary.answered = len(with_text)
+    summary.texts = [a.text_value for a in with_text[:TEXT_SAMPLE_SIZE]]
+    summary.text_response_ids = [a.response_id for a in with_text[:TEXT_SAMPLE_SIZE]]
 
 
 def _summarize_dates(summary: QuestionSummary, answers: list[Answer]) -> None:

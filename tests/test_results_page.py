@@ -167,3 +167,10 @@ def test_segment_is_compared_with_all_respondents(auth_client, owner):
     assert "all respondents" not in auth_client.get(f"/surveys/{survey.id}/results/").get_data(
         as_text=True
     )
+
+
+def test_text_answers_link_to_their_response(auth_client, owner):
+    survey = build(owner)
+    response = add_response(survey, {survey.questions[2]: "Linked"})
+    html = auth_client.get(f"/surveys/{survey.id}/results/").get_data(as_text=True)
+    assert f'/results/responses/{response.id}">#{response.id}</a>' in html
