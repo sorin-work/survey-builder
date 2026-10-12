@@ -92,9 +92,7 @@ def responses(survey_id: int):
     questions = survey.questions
     items = []
     for response in rows:
-        by_question = {}
-        for answer in response.answers:
-            by_question.setdefault(answer.question_id, []).append(answer)
+        by_question = response.answers_by_question()
         items.append(
             {
                 "id": response.id,

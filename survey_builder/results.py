@@ -119,9 +119,7 @@ def responses(survey_id: int):
 def response_detail(survey_id: int, response_id: int):
     survey = get_owned_survey(survey_id)
     response = get_survey_response(survey, response_id)
-    by_question: dict[int, list] = {}
-    for answer in response.answers:
-        by_question.setdefault(answer.question_id, []).append(answer)
+    by_question = response.answers_by_question()
     newer, older = neighbours(survey, response)
     return render_template(
         "results/response.html",

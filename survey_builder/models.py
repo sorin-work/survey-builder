@@ -182,6 +182,12 @@ class Response(db.Model):
     def is_complete(self) -> bool:
         return self.completed_at is not None
 
+    def answers_by_question(self) -> dict[int, list["Answer"]]:
+        grouped: dict[int, list[Answer]] = {}
+        for answer in self.answers:
+            grouped.setdefault(answer.question_id, []).append(answer)
+        return grouped
+
 
 class Answer(db.Model):
     """A single answer value. Multiple choice answers store one row per choice."""

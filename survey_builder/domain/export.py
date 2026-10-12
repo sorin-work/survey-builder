@@ -2,7 +2,6 @@
 
 import csv
 import io
-from collections import defaultdict
 
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -48,13 +47,11 @@ def export_rows(survey, period: ResponseFilter = ALL_TIME):
         .options(selectinload(Response.answers))
     )
     for response in responses:
-        by_question: dict[int, list[Answer]] = defaultdict(list)
-        for answer in response.answers:
-            by_question[answer.question_id].append(answer)
+        by_question = response.answers_by_question()
         yield [
             str(response.id),
             response.completed_at.strftime("%Y-%m-%d %H:%M:%S"),
-            *(_cell(q, by_question[q.id]) for q in questions),
+            *(_cell(q, by_question.get(q.id, [])) for q in questions),
         ]
 
 
