@@ -57,8 +57,14 @@
 
   {% if not total %}
     <div class="card empty">
+      {% if not period.is_open %}
+        <p>No responses match these filters.</p>
+        <p class="muted"><a href="{{ url_for('results.summary', survey_id=survey.id) }}">Show all responses</a></p>
+      {% else %}
       <p>No responses yet.</p>
-      {% if survey.status == "published" %}
+      {% endif %}
+      {% if not period.is_open %}
+      {% elif survey.status == "published" %}
         <p class="muted">Share the survey link to start collecting answers.</p>
       {% else %}
         <p class="muted">Publish the survey to get a link you can share.</p>

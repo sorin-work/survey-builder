@@ -174,3 +174,10 @@ def test_text_answers_link_to_their_response(auth_client, owner):
     response = add_response(survey, {survey.questions[2]: "Linked"})
     html = auth_client.get(f"/surveys/{survey.id}/results/").get_data(as_text=True)
     assert f'/results/responses/{response.id}">#{response.id}</a>' in html
+
+
+def test_empty_state_when_filters_match_nothing(auth_client, owner):
+    survey = build(owner)
+    add_response(survey, {survey.questions[0]: "Free"})
+    html = auth_client.get(f"/surveys/{survey.id}/results/?from=2099-01-01").get_data(as_text=True)
+    assert "No responses match these filters." in html
