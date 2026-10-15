@@ -181,3 +181,10 @@ def test_empty_state_when_filters_match_nothing(auth_client, owner):
     add_response(survey, {survey.questions[0]: "Free"})
     html = auth_client.get(f"/surveys/{survey.id}/results/?from=2099-01-01").get_data(as_text=True)
     assert "No responses match these filters." in html
+
+
+def test_responses_per_day_shows_for_a_single_day(auth_client, owner):
+    survey = build(owner)
+    add_response(survey, {survey.questions[0]: "Free"})
+    html = auth_client.get(f"/surveys/{survey.id}/results/").get_data(as_text=True)
+    assert "Responses per day" in html

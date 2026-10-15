@@ -43,11 +43,11 @@
     {% endif %}
   </section>
 
-  {% if timeline|length > 1 %}
+  {% if timeline %}
     <section class="card">
       <h2 class="card-title">Responses per day</h2>
       <div class="chart-wrap">
-        <canvas data-chart='{{ {"kind": "line",
+        <canvas data-chart='{{ {"kind": "line" if timeline|length > 1 else "bar",
                                 "labels": timeline|map("first")|map("string")|list,
                                 "counts": timeline|map("last")|list}|tojson }}'
                 aria-label="Responses per day" role="img"></canvas>
@@ -104,7 +104,7 @@
             {% if trend|length > 1 %}
               <h3 class="muted small">NPS by month</h3>
               <div class="chart-wrap chart-small">
-                <canvas data-chart='{{ {"kind": "line", "labels": trend|map("first")|list,
+                <canvas data-chart='{{ {"kind": "line" if timeline|length > 1 else "bar", "labels": trend|map("first")|list,
                                         "counts": trend|map("last")|map(attribute="score")|list,
                                         "signed": true}|tojson }}'
                         aria-label="NPS by month" role="img"></canvas>
