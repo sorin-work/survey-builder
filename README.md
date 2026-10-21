@@ -48,6 +48,14 @@ Open http://localhost:4416 and sign in with the demo account:
 - **Email:** `demo@example.com`
 - **Password:** `demo-password`
 
+The demo account comes with four surveys:
+
+- **Customer satisfaction 2026**: two pages, every question type, about 140
+  responses over the last four months (charts, NPS trend, segments, CSV export)
+- **Team offsite planning**: a skip rule ends the survey for people who cannot come
+- **Spring meetup feedback**: built from the event template, closed by its close date
+- **Product feedback (draft)**: not published yet
+
 Set `SEED_DEMO=false` to start with an empty database, and `WEB_PORT` to use
 another port.
 
