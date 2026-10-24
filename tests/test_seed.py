@@ -43,3 +43,15 @@ def test_event_survey_is_closed_by_date(db):
     event = db.session.query(Survey).filter_by(title="Spring meetup feedback").one()
     assert closed_reason(event) == "date"
     assert completed_response_count(event) == 36
+
+
+def test_demo_account_can_browse_everything(client, db):
+    seed_demo(responses=25)
+    resp = client.post("/login", data={"email": DEMO_EMAIL, "password": DEMO_PASSWORD})
+    assert resp.status_code == 302
+    for survey in db.session.query(Survey).all():
+        for path in ("edit", "results/", "results/responses", "results/export.csv", "preview"):
+            assert client.get(f"/surveys/{survey.id}/{path}").status_code == 200, path
+        if survey.share_token:
+            expected = 410 if survey.title == "Spring meetup feedback" else 200
+            assert client.get(f"/s/{survey.share_token}").status_code == expected
