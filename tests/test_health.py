@@ -39,3 +39,9 @@ def test_content_security_policy(client):
     policy = client.get("/").headers["Content-Security-Policy"]
     assert "default-src 'self'" in policy
     assert "object-src 'none'" in policy
+
+
+def test_footer_shows_the_version(client):
+    from survey_builder import __version__
+
+    assert f"Survey Builder {__version__}".encode() in client.get("/login").data

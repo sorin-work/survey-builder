@@ -8,6 +8,8 @@ from . import models  # noqa: F401  (register models with SQLAlchemy)
 from .config import load_config
 from .extensions import csrf, db, login_manager, migrate
 
+__version__ = "0.9.0"
+
 # Everything is served from our own origin. Inline handlers (confirm dialogs)
 # and the per-survey accent <style> still need 'unsafe-inline'.
 CONTENT_SECURITY_POLICY = "; ".join(
@@ -62,6 +64,7 @@ def create_app(config: dict | None = None) -> Flask:
     from .formatting import duration, nl2br, timeago
 
     app.jinja_env.globals["QUESTION_TYPES"] = QUESTION_TYPES
+    app.jinja_env.globals["APP_VERSION"] = __version__
     app.jinja_env.globals["TEXT_FORMATS"] = TEXT_FORMATS
     app.jinja_env.filters["duration"] = duration
     app.jinja_env.filters["nl2br"] = nl2br

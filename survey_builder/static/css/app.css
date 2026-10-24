@@ -984,3 +984,15 @@ h2,
   color: inherit;
   cursor: pointer;
 }
+
+.app-footer {
+  text-align: center;
+  font-size: 0.8rem;
+  padding: 2rem 0 1.5rem;
+}
+
+@media print {
+  .app-footer {
+    display: none;
+  }
+}
