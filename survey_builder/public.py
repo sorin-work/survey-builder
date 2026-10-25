@@ -1,9 +1,11 @@
 """The public side: anonymous respondents filling in a shared survey.
 
 Progress through a survey lives in the signed session cookie under
-``survey:<token>``: the response key and the page the respondent is on. The
-response row itself is created when the first page is submitted, so people
-who only open the link do not show up as abandoned responses.
+``survey:<token>``: the response key, the page the respondent is on, the pages
+visited so far (for Back), drafts typed before going Back and the seed used to
+shuffle options. The response row itself is created when the first page is
+submitted, so people who only open the link do not show up as abandoned
+responses.
 """
 
 import secrets
