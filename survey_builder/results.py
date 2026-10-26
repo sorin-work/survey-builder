@@ -2,15 +2,13 @@
 
 from flask import (
     Blueprint,
+    Response as HttpResponse,
     abort,
     flash,
     redirect,
     render_template,
     request,
     url_for,
-)
-from flask import (
-    Response as HttpResponse,
 )
 from flask_login import login_required
 from sqlalchemy import delete, select
