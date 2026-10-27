@@ -8,7 +8,7 @@ from . import models  # noqa: F401  (register models with SQLAlchemy)
 from .config import load_config
 from .extensions import csrf, db, login_manager, migrate
 
-__version__ = "0.9.0"
+__version__ = "1.0.0"
 
 # Everything is served from our own origin. Inline handlers (confirm dialogs)
 # and the per-survey accent <style> still need 'unsafe-inline'.
