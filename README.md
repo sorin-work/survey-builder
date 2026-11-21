@@ -106,6 +106,7 @@ HTTPS, otherwise respondents cannot get past the first page.
 A read-only JSON API is described in [docs/api.md](docs/api.md). How the code is
 organised is described in [docs/architecture.md](docs/architecture.md), and running
 it in production in [docs/deployment.md](docs/deployment.md).
+Ideas for later, nothing promised, are in [ROADMAP.md](ROADMAP.md).
 
 ## Tests
 
